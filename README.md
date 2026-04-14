@@ -2,6 +2,13 @@
 
 Learn core local-LLM patterns with 7 short scripts: chat, multi-turn context, streaming, structured output, embeddings, tiny RAG, and tool calling.
 
+## Author and Course Details
+
+- Author: Dr. Sailesh Conjeti
+- Course: Generative and Agentic AI
+- Repository: https://github.com/saileshconjeti/Ollama-Tutorials
+- Audience: Students learning practical local LLM workflows with Python and Ollama
+
 ---
 
 ## One-Page Quickstart (10-15 min)
@@ -351,3 +358,10 @@ python3 01_chat.py
 3. `04`-`05`: 15 min  
 4. `06`: 15-20 min  
 5. `07` + reflection: 10 min
+
+---
+
+## Credits
+
+- Created and maintained by Dr. Sailesh Conjeti
+- Course: Generative and Agentic AI
