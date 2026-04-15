@@ -1,6 +1,6 @@
-# Ollama Tutorials for Students (Python + Modelfile)
+# Ollama Tutorials for Students (Python + Personalized TA)
 
-Practical, local LLM labs for **Generative and Agentic AI** using Ollama.
+Practical local LLM labs for **Generative and Agentic AI** using Ollama, plus a personalized Teaching Assistant (TA) built with `Modelfile` and Open WebUI.
 
 - Author: **Dr. Sailesh Conjeti**
 - Course: **Generative and Agentic AI**
@@ -10,36 +10,58 @@ Practical, local LLM labs for **Generative and Agentic AI** using Ollama.
 
 This material was prepared with assistance from **OpenAI Codex**, and every file in this repository has been manually reviewed and verified by the author before classroom use.
 
-## What Students Will Learn
+## Repo Contents
 
-By completing this tutorial set, students will be able to:
+- `01_chat.py` to `07_tool_calling.py`: Python tutorial labs
+- `Modelfile`: personalized course TA model recipe
+- `README.md`: setup + lab instructions
+
+## Learning Outcomes
+
+By completing this repository, students will be able to:
 
 - run local chat models from Python
-- build multi-turn and streaming chat flows
-- produce structured outputs from a schema
-- generate embeddings and inspect vector dimensions
-- implement a tiny end-to-end RAG pipeline
-- implement tool calling where the **application executes tools**
-- create and run a custom assistant from `Modelfile`
+- build multi-turn and streaming chat workflows
+- extract structured outputs using schemas
+- generate embeddings and understand vector dimensions
+- implement a tiny RAG pipeline
+- implement application-side tool calling
+- build and personalize a local course TA with `Modelfile`
+- use Open WebUI as a local browser interface for their TA
 
-## Prerequisites
+## System Requirements
 
 - Python 3.10+
-- Ollama installed
-- Terminal / Command Prompt access
+- Ollama
+- Terminal or PowerShell
+- Docker Desktop (recommended for Open WebUI)
+
+### Model and RAM Guidance
+
+Use this default classroom stack:
+
+- default model: `qwen2.5:3b`
+- low-end fallback: `qwen2.5:1.5b` or `llama3.2:1b`
+- optional coding helper: `qwen2.5-coder:1.5b`
+
+Recommended RAM:
+
+- minimum workable: `8 GB` (prefer `1.5b` to `3b` models)
+- recommended baseline: `16 GB` (`qwen2.5:3b` works more reliably)
+- comfortable headroom: `24 GB+`
 
 ## Setup by Operating System
 
 ### macOS
 
-1. Install Ollama from the official website and launch the app once.
-2. Verify installation:
+1. Install Ollama from the official download page and launch it once.
+2. Verify:
 
 ```bash
 ollama --version
 ```
 
-3. In this project folder, create and activate a virtual environment:
+3. Create Python environment in this project:
 
 ```bash
 python3 -m venv .venv
@@ -48,7 +70,7 @@ python -m pip install --upgrade pip
 pip install ollama
 ```
 
-4. Start Ollama service (if not already running):
+4. Start Ollama if needed:
 
 ```bash
 ollama serve
@@ -56,14 +78,14 @@ ollama serve
 
 ### Windows (PowerShell)
 
-1. Install Ollama from the official website.
-2. Verify installation in a new PowerShell window:
+1. Install Ollama from the official download page.
+2. Verify:
 
 ```powershell
 ollama --version
 ```
 
-3. In this project folder, create and activate a virtual environment:
+3. Create Python environment in this project:
 
 ```powershell
 python -m venv .venv
@@ -72,13 +94,13 @@ python -m pip install --upgrade pip
 pip install ollama
 ```
 
-4. Start Ollama service:
+4. Start Ollama if needed:
 
 ```powershell
 ollama serve
 ```
 
-If script execution is blocked, run PowerShell as user and set execution policy:
+If script execution is blocked:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
@@ -86,14 +108,14 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ### Linux
 
-1. Install Ollama using the official install instructions for your distribution.
-2. Verify installation:
+1. Install Ollama using official Linux instructions.
+2. Verify:
 
 ```bash
 ollama --version
 ```
 
-3. In this project folder, create and activate a virtual environment:
+3. Create Python environment in this project:
 
 ```bash
 python3 -m venv .venv
@@ -102,60 +124,39 @@ python -m pip install --upgrade pip
 pip install ollama
 ```
 
-4. Start Ollama service:
+4. Start Ollama if needed:
 
 ```bash
 ollama serve
 ```
 
-## Pull Required Models
+## Pull Models
 
-Run once on any OS:
+For Python labs in this repo:
 
 ```bash
 ollama pull qwen3:4b
 ollama pull qwen3-embedding:0.6b
 ```
 
-Optional comparison model:
+For personalized TA exercise:
 
 ```bash
-ollama pull llama3.2:3b
+ollama pull qwen2.5:3b
+ollama pull qwen2.5:1.5b
+ollama pull llama3.2:1b
+ollama pull qwen2.5-coder:1.5b
 ```
 
-Check local models:
+Check installed models:
 
 ```bash
 ollama list
 ```
 
-## Low-Spec Machine Guidance
+## Python Tutorial Track
 
-Default tutorial model: `qwen3:4b`
-
-If student hardware is limited, use smaller chat models:
-
-- `llama3.2:3b` (recommended first fallback)
-- `qwen2.5:1.5b` (for very constrained systems)
-
-Pull fallback models:
-
-```bash
-ollama pull llama3.2:3b
-ollama pull qwen2.5:1.5b
-```
-
-Approximate RAM guidance for smooth classroom use:
-
-- minimum workable: `8 GB RAM` (use `1.5b-3b` models)
-- recommended baseline: `16 GB RAM` (`qwen3:4b` generally workable)
-- comfortable for larger optional models: `24 GB+ RAM`
-
-If responses are slow or the model is frequently unloaded, switch to a smaller model tag for the same script demonstrations.
-
-## Run Tutorial Scripts (Python)
-
-Run in order:
+Run scripts in order:
 
 ```bash
 python 01_chat.py
@@ -167,57 +168,147 @@ python 06_tiny_rag.py
 python 07_tool_calling.py
 ```
 
-## Tutorial Map
+## Personalized TA Exercise (Modelfile)
 
-- `01_chat.py`: Minimal local chat call from Python
-- `02_multi_turn_chat.py`: Conversation history and context
-- `03_streaming.py`: Incremental token/chunk output
-- `04_structured_output.py`: Schema-constrained JSON output
-- `05_embeddings.py`: Embedding vectors and dimensions
-- `06_tiny_rag.py`: Retrieval + grounded answering vs no-RAG
-- `07_tool_calling.py`: Model requests tool, app executes tool
+This repo includes a ready `Modelfile` that defines:
 
-## Use the Included Modelfile
+- base model: `qwen2.5:3b`
+- low-temperature classroom behavior
+- clear TA policy (hints, scaffolding, no assignment substitution)
 
-This repo includes a `Modelfile` for a custom course assistant.
-
-Create model:
+### Build and Test the TA Model
 
 ```bash
-ollama create course-ta -f Modelfile
+ollama create genai-course-ta -f Modelfile
+ollama run genai-course-ta
 ```
 
-Run model:
+Try prompt:
+
+```text
+I am a student in a practical course on generative and agentic AI. Help me understand the difference between RAG and tool use.
+```
+
+### Personalize the TA
+
+Students can edit `Modelfile` and rebuild:
 
 ```bash
-ollama run course-ta
+ollama create genai-course-ta -f Modelfile
+```
+
+Common personalization ideas:
+
+- more concise default answers
+- stronger debugging focus
+- more guided hints and checkpoints
+- course/project-specific style instructions
+
+## Open WebUI Setup (Student Laptop)
+
+Recommended approach:
+
+- run Ollama natively on the host
+- run Open WebUI in Docker
+
+This keeps model inference in Ollama while giving students a browser UI.
+
+### 1) Install Docker Desktop
+
+Install Docker Desktop (macOS/Windows), open it, then verify:
+
+```bash
+docker --version
+```
+
+### 2) Run Open WebUI Container
+
+```bash
+docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main
+```
+
+Open:
+
+`http://localhost:3000`
+
+### 3) Connect Open WebUI to Ollama
+
+In Open WebUI:
+
+1. Admin Settings
+2. Connections
+3. Ollama
+4. Set endpoint
+
+If Open WebUI runs in Docker and Ollama runs on host, use:
+
+`http://host.docker.internal:11434`
+
+### 4) Use the Custom TA in Open WebUI
+
+After connection, select `genai-course-ta` as model.
+
+### 5) Add Student Knowledge
+
+Students should upload:
+
+- lecture slides
+- lab sheets
+- personal notes
+- rubric summaries
+
+Then attach these to their model/preset for grounded help.
+
+### 6) Security Note for Classrooms
+
+In early weeks, avoid enabling unreviewed tools/plugins in Open WebUI. Focus first on chat + knowledge workflow.
+
+## Daily Commands for Students
+
+```bash
+ollama serve
+ollama list
+ollama run genai-course-ta
+ollama show --modelfile genai-course-ta
+docker start open-webui
+docker stop open-webui
+```
+
+Remove UI container but keep persisted data volume:
+
+```bash
+docker rm -f open-webui
 ```
 
 ## Troubleshooting
 
 ### `ollama: command not found`
 
-- restart terminal after installation
-- verify Ollama was installed correctly
+- restart terminal
+- relaunch Ollama app
+- recheck `ollama --version`
 
-### Cannot connect to `localhost:11434`
+### Open WebUI opens but models do not appear
 
-- Ollama service/app is not running
-- start with `ollama serve`
+- ensure Ollama is running
+- verify Ollama endpoint in Open WebUI
+- for Docker Open WebUI + host Ollama: use `http://host.docker.internal:11434`
 
-### `ModuleNotFoundError: ollama`
+### Model responses are too slow
 
-- activate virtual environment
-- run `pip install ollama`
+- switch from `qwen2.5:3b` to `qwen2.5:1.5b` or `llama3.2:1b`
+- reduce context (`PARAMETER num_ctx 4096`) in `Modelfile` if needed
 
-### Model not found
+### Python error: `ModuleNotFoundError: ollama`
 
 ```bash
-ollama pull qwen3:4b
-ollama pull qwen3-embedding:0.6b
+# macOS/Linux
+source .venv/bin/activate
+pip install ollama
 ```
 
-### Slow responses
-
-- first run is slower because model loads into memory
-- use smaller models for weaker hardware
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+pip install ollama
+```
