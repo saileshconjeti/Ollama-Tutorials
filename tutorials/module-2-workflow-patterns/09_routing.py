@@ -1,7 +1,7 @@
 # File name: 09_routing.py
 # Purpose: Student-friendly demo of customer review monitoring with LangGraph.
 # Concepts covered: classification, branching, explicit routes, graph state.
-# Builds on: 04_structured_output.py, 07_tool_calling.py
+# Builds on: 04_structured_output.py, 08_prompt_chaining.py
 # New concept: route one message to different LLM handlers
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
@@ -208,7 +208,7 @@ def prompt_for_review(default_review: str = DEFAULT_REVIEW) -> str:
 
 if __name__ == "__main__":
     print_header("09 - CUSTOMER REVIEW ROUTING")
-    print("Builds on: 04_structured_output.py, 07_tool_calling.py")
+    print("Builds on: 04_structured_output.py, 08_prompt_chaining.py")
     print("New concept: route one review to different LLM handlers")
 
     app = build_graph()

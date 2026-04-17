@@ -18,11 +18,11 @@ Module: **Module 2**
 Run from repository root.
 
 ```bash
-python tutorials/module-2-workflow-patterns/07_tool_calling.py
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/09_routing.py
 python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py
 python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
+python tutorials/module-2-workflow-patterns/13_tool_calling.py
 ```
 
 ## Prompt Chaining CLI Arguments (`08_prompt_chaining.py`)
@@ -74,6 +74,20 @@ Example:
 ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen2.5:0.5b python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
 ```
 
+## Tool Calling Bridge (`13_tool_calling.py`)
+
+- place this last to bridge from workflow patterns to full agents
+- shows the app-controlled tool loop:
+  - model requests tool
+  - app executes tool
+  - model finalizes answer using tool result
+
+Example:
+
+```bash
+python tutorials/module-2-workflow-patterns/13_tool_calling.py
+```
+
 ## Expected Student Observations
 
 - Tool calls are requested by the model but executed by Python
@@ -81,3 +95,4 @@ ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen
 - Routing sends inputs to different handlers/models based on classification
 - Orchestrator-worker shows one planner coordinating multiple specialized workers
 - Evaluator-reflection shows explicit quality control through critique-revise loops
+- Tool-calling serves as a bridge from workflow patterns to agent loops

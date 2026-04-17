@@ -9,18 +9,22 @@ Module: **Module 2**
 
 ## Module Topics
 
-- `07_tool_calling.py`: Model requests tools, application executes tools
 - `08_prompt_chaining.py`: Multi-step prompt chain with structured intermediate state
 - `09_routing.py`: Classification-based routing to specialized handlers/LLMs
+- `11_orchestrator_worker.py`: One orchestrator delegates to specialized workers and synthesizes outputs
+- `12_evaluator_reflection.py`: Critique-revise loop with explicit quality control
+- `13_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
 
 ## Run Order
 
 From repo root:
 
 ```bash
-python tutorials/module-2-workflow-patterns/07_tool_calling.py
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/09_routing.py
+python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py
+python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
+python tutorials/module-2-workflow-patterns/13_tool_calling.py
 ```
 
 ## Prompt Chaining Arguments (`08_prompt_chaining.py`)
@@ -42,3 +46,5 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutoria
 - Separate model reasoning steps into explicit workflow stages
 - Add deterministic control via application code
 - Route requests based on classification and inspect graph state
+- Use critique-revision loops for measurable output improvement
+- Bridge workflow patterns into app-executed tool loops

@@ -1,11 +1,11 @@
 # File name: 12_evaluator_reflection.py
 # Purpose: Demonstrate evaluator-critique-reflection with optional looping.
 # Concepts covered: draft generation, structured critique, revision loop, quality control.
-# Builds on: 08_prompt_chaining.py, 10_routing.py, 11_orchestrator_worker.py
+# Builds on: 08_prompt_chaining.py, 09_routing.py, 11_orchestrator_worker.py
 # New concept: adding explicit quality control to an LLM workflow
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
-# How to run: `python 12_evaluator_reflection.py`
+# How to run: `python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py`
 # What students should observe:
 # - first create a draft
 # - then critique it using explicit evaluation criteria
@@ -202,7 +202,7 @@ def prompt_for_task(default_task: str = DEFAULT_TASK) -> str:
 
 if __name__ == "__main__":
     print_header("12 - EVALUATOR / CRITIQUE / REFLECTION")
-    print("Builds on: 08_prompt_chaining.py, 10_routing.py, 11_orchestrator_worker.py")
+    print("Builds on: 08_prompt_chaining.py, 09_routing.py, 11_orchestrator_worker.py")
     print("New concept: quality control with explicit critique and revision")
     print(
         f"Speed mode: {'FAST' if FAST_MODE else 'FULL'} | "
