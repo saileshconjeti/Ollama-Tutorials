@@ -1,0 +1,13 @@
+Meeting: Weekly Product and Growth Sync
+Date: April 16, 2026
+Attendees: Priya, Marco, Jen, Ali, QA Lead
+
+- Onboarding drop-off remains high at step 3 (~38%).
+- Team agreed to reduce signup form fields from 12 to 7.
+- Marco will share the revised signup form draft by April 22, 2026.
+- Jen requested new homepage headline and CTA copy by April 21, 2026.
+- Legal review is required before publishing customer testimonials.
+- Priya reported trial-to-paid conversion improved from 4.8% to 5.6%.
+- Open question: run A/B test first or do a full rollout.
+- QA requested a clear release checklist before launch.
+- Next meeting scheduled for April 23, 2026.

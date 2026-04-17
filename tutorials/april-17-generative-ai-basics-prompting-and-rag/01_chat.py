@@ -16,7 +16,7 @@ from ollama import chat
 response = chat(
     model="qwen3:4b",
     messages=[
-        {"role": "system", "content": "You are a concise university teaching assistant."},
+        {"role": "system", "content": "You are a concise university teaching assistant for the course Generative and Agentic AI."},
         {"role": "user", "content": "Explain RAG in 120 words."},
     ],
 )

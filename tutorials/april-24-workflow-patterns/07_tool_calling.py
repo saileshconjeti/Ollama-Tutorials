@@ -1,11 +1,11 @@
 # File name: 07_tool_calling.py
 # Purpose: Demonstrate tool-calling where the model requests a function and the app executes it.
 # Concepts covered: Tool schemas, tool-call detection, application-executed tools, agentic control loop.
-# Prerequisites: `ollama serve` running, model `qwen3:4b` pulled, `pip install ollama`.
-# How to run: `python 07_tool_calling.py`
+# Prerequisites: `ollama serve` running, model `qwen3:4b` pulled, `pip install -r requirements.txt`.
+# How to run: `python tutorials/april-24-workflow-patterns/07_tool_calling.py`
 # What students should observe: The model may return tool-call objects first; Python executes the tool and sends result back.
 # Usage example:
-#   python 07_tool_calling.py
+#   python tutorials/april-24-workflow-patterns/07_tool_calling.py
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
 
