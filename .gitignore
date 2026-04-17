@@ -1,5 +1,6 @@
 # Python virtual environment
 .venv/
+**/.venv/
 
 # Python cache
 __pycache__/
@@ -10,5 +11,6 @@ __pycache__/
 .DS_Store
 
 # IDE settings
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/

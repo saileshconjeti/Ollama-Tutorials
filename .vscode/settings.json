@@ -1,0 +1,5 @@
+{
+  "python.analysis.extraPaths": [
+    "./tutorials/module-2-workflow-patterns"
+  ]
+}
