@@ -12,17 +12,17 @@ This material was prepared with assistance from **OpenAI Codex**, and every file
 
 ## Class Schedule and Guides
 
-- **April 17, 2026**: [Generative AI Basics - Prompting and RAG](APRIL_17_GENERATIVE_AI_BASICS_PROMPTING_AND_RAG.md)
-  - Theory: [LEARN.md](tutorials/april-17-generative-ai-basics-prompting-and-rag/LEARN.md)
-  - Code Walkthrough: [BUILD.md](tutorials/april-17-generative-ai-basics-prompting-and-rag/BUILD.md)
-- **April 24, 2026**: [Workflow Patterns](APRIL_24_WORKFLOW_PATTERNS.md)
-  - Theory: [LEARN.md](tutorials/april-24-workflow-patterns/LEARN.md)
-  - Code Walkthrough: [BUILD.md](tutorials/april-24-workflow-patterns/BUILD.md)
+- **Module 1**: [Generative AI Basics - Prompting and RAG](MODULE_1_GENERATIVE_AI_BASICS_PROMPTING_AND_RAG.md)
+  - Theory: [LEARN.md](tutorials/module-1-generative-ai-basics-prompting-and-rag/LEARN.md)
+  - Code Walkthrough: [BUILD.md](tutorials/module-1-generative-ai-basics-prompting-and-rag/BUILD.md)
+- **Module 2**: [Workflow Patterns](MODULE_2_WORKFLOW_PATTERNS.md)
+  - Theory: [LEARN.md](tutorials/module-2-workflow-patterns/LEARN.md)
+  - Code Walkthrough: [BUILD.md](tutorials/module-2-workflow-patterns/BUILD.md)
 
 ## Repository Organization
 
-- `tutorials/april-17-generative-ai-basics-prompting-and-rag/`
-- `tutorials/april-24-workflow-patterns/`
+- `tutorials/module-1-generative-ai-basics-prompting-and-rag/`
+- `tutorials/module-2-workflow-patterns/`
 - `requirements.txt`
 - `README.md`
 

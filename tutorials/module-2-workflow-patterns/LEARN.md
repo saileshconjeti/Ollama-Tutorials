@@ -1,6 +1,6 @@
 # LEARN - Workflow Patterns
 
-Class Date: **April 24, 2026**
+Module: **Module 2**
 
 ## Theory Goals
 

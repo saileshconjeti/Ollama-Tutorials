@@ -1,6 +1,6 @@
 # BUILD - Workflow Patterns
 
-Class Date: **April 24, 2026**
+Module: **Module 2**
 
 ## Prerequisites
 
@@ -16,9 +16,9 @@ Class Date: **April 24, 2026**
 Run from repository root.
 
 ```bash
-python tutorials/april-24-workflow-patterns/07_tool_calling.py
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py
-python tutorials/april-24-workflow-patterns/09_routing.py
+python tutorials/module-2-workflow-patterns/07_tool_calling.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
+python tutorials/module-2-workflow-patterns/09_routing.py
 ```
 
 ## Prompt Chaining CLI Arguments (`08_prompt_chaining.py`)
@@ -29,8 +29,8 @@ python tutorials/april-24-workflow-patterns/09_routing.py
 Examples:
 
 ```bash
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py --file tutorials/april-24-workflow-patterns/sample_meeting_minutes.txt --output tutorials/april-24-workflow-patterns/my_minutes_report.md
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
 ```
 
 ## Suggested Routing Demo Inputs (`09_routing.py`)

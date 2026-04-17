@@ -1,6 +1,6 @@
 # BUILD - Generative AI Basics: Prompting and RAG
 
-Class Date: **April 17, 2026**
+Module: **Module 1**
 
 ## Prerequisites
 
@@ -17,18 +17,18 @@ Class Date: **April 17, 2026**
 Run from repository root.
 
 ```bash
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/01_chat.py
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/02_multi_turn_chat.py
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/03_streaming.py
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/04_structured_output.py
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/05_embeddings.py
-python tutorials/april-17-generative-ai-basics-prompting-and-rag/06_tiny_rag.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/02_multi_turn_chat.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/03_streaming.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/04_structured_output.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/05_embeddings.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/06_tiny_rag.py
 ```
 
 ## Personalized TA Build
 
 ```bash
-ollama create genai-course-ta -f tutorials/april-17-generative-ai-basics-prompting-and-rag/Modelfile
+ollama create genai-course-ta -f tutorials/module-1-generative-ai-basics-prompting-and-rag/Modelfile
 ollama run genai-course-ta
 ```
 

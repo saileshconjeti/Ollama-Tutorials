@@ -5,7 +5,7 @@
 # New concept: prompt chaining with validated intermediate JSON
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
-# How to run: `python tutorials/april-24-workflow-patterns/08_prompt_chaining.py`
+# How to run: `python tutorials/module-2-workflow-patterns/08_prompt_chaining.py`
 # What students should observe:
 # - Step 1 converts raw notes into meaningful meeting minutes
 # - Step 2 turns those minutes into a practical action plan

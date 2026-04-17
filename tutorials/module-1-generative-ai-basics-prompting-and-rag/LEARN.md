@@ -1,6 +1,6 @@
 # LEARN - Generative AI Basics: Prompting and RAG
 
-Class Date: **April 17, 2026**
+Module: **Module 1**
 
 ## Theory Goals
 

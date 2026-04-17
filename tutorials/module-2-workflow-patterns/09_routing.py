@@ -5,7 +5,7 @@
 # New concept: route one message to different LLM handlers
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
-# How to run: `python tutorials/april-24-workflow-patterns/09_routing.py`
+# How to run: `python tutorials/module-2-workflow-patterns/09_routing.py`
 # What students should observe:
 # - a classifier emits a structured RouteDecision
 # - the graph routes the review to a specialized handler

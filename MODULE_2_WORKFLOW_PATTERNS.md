@@ -1,26 +1,26 @@
 # Workflow Patterns
 
-Date: **April 24, 2026**
+Module: **Module 2**
 
 ## Learning Materials
 
-- Theory: [LEARN.md](tutorials/april-24-workflow-patterns/LEARN.md)
-- Code Walkthrough: [BUILD.md](tutorials/april-24-workflow-patterns/BUILD.md)
+- Theory: [LEARN.md](tutorials/module-2-workflow-patterns/LEARN.md)
+- Code Walkthrough: [BUILD.md](tutorials/module-2-workflow-patterns/BUILD.md)
 
-## Planned Coverage
+## Module Topics
 
 - `07_tool_calling.py`: Model requests tools, application executes tools
 - `08_prompt_chaining.py`: Multi-step prompt chain with structured intermediate state
 - `09_routing.py`: Classification-based routing to specialized handlers/LLMs
 
-## Run Order (Next Class)
+## Run Order
 
 From repo root:
 
 ```bash
-python tutorials/april-24-workflow-patterns/07_tool_calling.py
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py
-python tutorials/april-24-workflow-patterns/09_routing.py
+python tutorials/module-2-workflow-patterns/07_tool_calling.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
+python tutorials/module-2-workflow-patterns/09_routing.py
 ```
 
 ## Prompt Chaining Arguments (`08_prompt_chaining.py`)
@@ -33,8 +33,8 @@ Optional CLI arguments:
 Examples:
 
 ```bash
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py
-python tutorials/april-24-workflow-patterns/08_prompt_chaining.py --file tutorials/april-24-workflow-patterns/sample_meeting_minutes.txt --output tutorials/april-24-workflow-patterns/my_minutes_report.md
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
 ```
 
 ## Learning Focus
