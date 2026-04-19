@@ -6,12 +6,28 @@ Module: **Module 2**
 
 - `ollama serve` is running
 - Python virtual environment is active
-- dependencies installed: `pip install -r requirements.txt`
+- dependencies installed from repo root: `python -m pip install -r requirements.txt`
 - models available:
   - `qwen3:0.6b`
   - `qwen2.5:0.5b`
-  - `qwen3:4b` (optional, for higher-quality critique)
-  - `qwen3-embedding:0.6b`
+  - `qwen3:4b` (default helper model via `OLLAMA_CHAT_MODEL`)
+
+## Environment Setup
+
+Run once at the beginning of class from repo root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+For every new terminal session:
+
+```bash
+source .venv/bin/activate
+```
 
 ## Step-by-Step Execution
 
@@ -81,6 +97,7 @@ ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen
   - model requests tool
   - app executes tool
   - model finalizes answer using tool result
+- uses `ask_ollama_structured(...)` from `workflow_utils.py`
 
 Example:
 

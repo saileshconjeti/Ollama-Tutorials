@@ -37,6 +37,9 @@ This structure is designed to scale as new tutorial sets are added.
 
 ## Setup by Operating System
 
+Use one shared `.venv` and one shared root `requirements.txt` for all modules.
+No module-specific requirements files are needed.
+
 ### macOS
 
 1. Install Ollama from the official download page and launch it once.

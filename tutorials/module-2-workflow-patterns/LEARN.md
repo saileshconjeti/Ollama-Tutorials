@@ -41,6 +41,7 @@ By the end of this class, students should be able to:
 - model proposes a tool call from a provided schema
 - application executes the requested tool deterministically
 - model consumes tool result and produces final response
+- implementation uses `ask_ollama_structured(...)` from `workflow_utils.py`
 
 ## Why This Matters
 
@@ -59,3 +60,4 @@ By the end of this class, students should be able to:
 - `11_evaluator_reflection.py`
 - `12_tool_calling.py`
 - `workflow_utils.py`
+- root `requirements.txt` (shared by all modules)

@@ -1,0 +1,1 @@
+Course reminders: submit your project proposal by Friday, form groups of three, bring your laptop to the lab, and install Ollama before next week's tutorial.

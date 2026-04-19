@@ -1,3 +1,4 @@
+# Shared dependencies for all tutorials (Module 1 + Module 2)
 ollama>=0.4.7
 pydantic>=2.7
 langchain>=0.3.0

@@ -7,6 +7,23 @@ Module: **Module 2**
 - Theory: [LEARN.md](tutorials/module-2-workflow-patterns/LEARN.md)
 - Code Walkthrough: [BUILD.md](tutorials/module-2-workflow-patterns/BUILD.md)
 
+## Setup
+
+Run once at the beginning of class from repo root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+For every new terminal session:
+
+```bash
+source .venv/bin/activate
+```
+
 ## Module Topics
 
 - `08_prompt_chaining.py`: Multi-step prompt chain with structured intermediate state
@@ -14,6 +31,7 @@ Module: **Module 2**
 - `10_orchestrator_worker.py`: One orchestrator delegates to specialized workers and synthesizes outputs
 - `11_evaluator_reflection.py`: Critique-revise loop with explicit quality control
 - `12_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
+- `workflow_utils.py`: Shared helper utilities (`ask_ollama_structured`, printing, JSON fallback parse)
 
 ## Run Order
 

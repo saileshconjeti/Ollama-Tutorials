@@ -5,12 +5,23 @@ Module: **Module 1**
 ## Prerequisites
 
 - `ollama serve` is running
-- Python virtual environment is active
-- dependencies installed: `pip install -r requirements.txt`
+- one shared class virtual environment is active (`source .venv/bin/activate`)
+- dependencies installed from repo root: `python -m pip install -r requirements.txt`
 - models available:
   - `qwen3:4b`
   - `qwen3-embedding:0.6b`
   - `qwen2.5:3b` (for personalized TA)
+
+## One-Time Class Setup
+
+Run once at the beginning of class from repo root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
 ## Step-by-Step Execution
 
