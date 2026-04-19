@@ -1,11 +1,11 @@
-# File name: 11_orchestrator_worker.py
+# File name: 10_orchestrator_worker.py
 # Purpose: Student-friendly demo of orchestrator-worker with LangGraph.
 # Concepts covered: work planning, specialized workers, shared state, synthesis.
 # Builds on: 08_prompt_chaining.py, 09_routing.py
 # New concept: one planner delegates work to multiple narrow workers
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
-# How to run: `python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py`
+# How to run: `python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py`
 # What students should observe:
 # - the orchestrator emits a structured WorkPlan
 # - workers have narrow responsibilities
@@ -40,6 +40,7 @@ MAX_RETRIES = 0 if FAST_MODE else 2
 
 
 class WorkerTask(BaseModel):
+    # One unit of work assigned by the orchestrator.
     worker_name: Literal["study_strategy_worker", "schedule_worker", "wellbeing_worker"]
     goal: str
     input_notes: List[str]
@@ -63,6 +64,7 @@ class FinalSynthesis(BaseModel):
 
 
 class WorkflowState(TypedDict, total=False):
+    # Shared graph state; worker_results is aggregated across parallel branches.
     topic: str
     work_plan: dict
     worker_results: Annotated[list[dict], operator.add]
@@ -71,6 +73,7 @@ class WorkflowState(TypedDict, total=False):
 
 def default_work_plan(topic: str) -> dict:
     """Fast deterministic plan to avoid an extra model call."""
+    # Useful for classroom demos where we want speed and stable output.
     return WorkPlan(
         overall_goal=f"Build a realistic, high-impact study execution plan for: {topic}",
         tasks=[
@@ -104,6 +107,7 @@ def default_work_plan(topic: str) -> dict:
 
 def get_worker_task(work_plan: dict, worker_name: str) -> dict:
     """Fetch the worker's own task from the plan for smaller prompts."""
+    # Each worker reads only its own assignment to stay focused.
     for item in work_plan.get("tasks", []):
         if item.get("worker_name") == worker_name:
             return item
@@ -113,6 +117,7 @@ def get_worker_task(work_plan: dict, worker_name: str) -> dict:
 def orchestrator_node(state: WorkflowState) -> WorkflowState:
     """Create a work plan for three specialized workers."""
     if not USE_LLM_ORCHESTRATOR:
+        # Deterministic orchestrator path (faster, fewer model calls).
         return {"work_plan": default_work_plan(state["topic"]), "worker_results": []}
 
     plan = ask_ollama_structured(
@@ -206,6 +211,7 @@ def wellbeing_worker_node(state: WorkflowState) -> WorkflowState:
 
 def synthesize_node(state: WorkflowState) -> WorkflowState:
     """Combine all worker outputs into one final synthesis."""
+    # Final integration step: merge specialized outputs into one recommendation.
     synthesis = ask_ollama_structured(
         user_prompt=f"""
         Synthesize the worker outputs into one student-ready recommendation.
@@ -234,10 +240,12 @@ def build_graph():
     graph.add_node("synthesize", synthesize_node)
 
     graph.add_edge(START, "orchestrator")
+    # Fan-out: orchestrator delegates to all workers.
     graph.add_edge("orchestrator", "study_strategy_worker")
     graph.add_edge("orchestrator", "schedule_worker")
     graph.add_edge("orchestrator", "wellbeing_worker")
 
+    # Fan-in: all worker outputs are aggregated before synthesis.
     graph.add_edge("study_strategy_worker", "synthesize")
     graph.add_edge("schedule_worker", "synthesize")
     graph.add_edge("wellbeing_worker", "synthesize")

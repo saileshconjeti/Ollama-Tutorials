@@ -1,12 +1,12 @@
-# File name: 13_tool_calling.py
+# File name: 12_tool_calling.py
 # Purpose: Demonstrate tool-calling where the model requests a function and the app executes it.
 # Concepts covered: Tool schemas, tool-call detection, application-executed tools, agentic control loop.
 # Module placement: final tutorial in workflow patterns, bridging into agentic AI.
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled, `pip install -r requirements.txt`.
-# How to run: `python tutorials/module-2-workflow-patterns/13_tool_calling.py`
+# How to run: `python tutorials/module-2-workflow-patterns/12_tool_calling.py`
 # What students should observe: The model may return tool-call objects first; Python executes the tool and sends result back.
 # Usage example:
-#   python tutorials/module-2-workflow-patterns/13_tool_calling.py
+#   python tutorials/module-2-workflow-patterns/12_tool_calling.py
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
 
@@ -34,6 +34,7 @@ tools = [
 ]
 
 messages = [
+    # Start with a plain user request; the model decides whether to call a tool.
     {"role": "user", "content": "What is 37 + 58?"}
 ]
 
@@ -59,6 +60,7 @@ if not tool_calls:
     print("\nNo tool call was requested by the model.")
     print(message.content)
 else:
+    # In richer demos there could be multiple tool calls in one response.
     for call in tool_calls:
         fn_name = call.function.name
         args = call.function.arguments
@@ -68,6 +70,7 @@ else:
             result = args["a"] + args["b"]
 
             # Send back both the assistant tool-call message and tool output.
+            # This is required so the model can continue the conversation coherently.
             messages.append(message.model_dump())
             messages.append({
                 "role": "tool",

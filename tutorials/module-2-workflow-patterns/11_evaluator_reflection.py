@@ -1,11 +1,11 @@
-# File name: 12_evaluator_reflection.py
+# File name: 11_evaluator_reflection.py
 # Purpose: Demonstrate evaluator-critique-reflection with optional looping.
 # Concepts covered: draft generation, structured critique, revision loop, quality control.
-# Builds on: 08_prompt_chaining.py, 09_routing.py, 11_orchestrator_worker.py
+# Builds on: 08_prompt_chaining.py, 09_routing.py, 10_orchestrator_worker.py
 # New concept: adding explicit quality control to an LLM workflow
 # Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
 #                `pip install -r requirements.txt`
-# How to run: `python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py`
+# How to run: `python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py`
 # What students should observe:
 # - first create a draft
 # - then critique it using explicit evaluation criteria
@@ -53,6 +53,7 @@ class RevisedOutput(BaseModel):
 
 
 class WorkflowState(TypedDict, total=False):
+    # State captures both latest artifacts and full loop history.
     task: str
     draft: dict
     critique: dict
@@ -78,6 +79,7 @@ def draft_node(state: WorkflowState) -> WorkflowState:
     )
     return {
         "draft": draft.model_dump(),
+        # Loop counters/history are initialized once at draft stage.
         "revision_count": 0,
         "critique_history": [],
         "revision_history": [],
@@ -86,6 +88,7 @@ def draft_node(state: WorkflowState) -> WorkflowState:
 
 def critique_node(state: WorkflowState) -> WorkflowState:
     """Critique the current draft."""
+    # After the first loop, critique the revised draft instead of the original.
     current_text = state.get("revised", state["draft"])
     critique = ask_ollama_structured(
         user_prompt=f"""
@@ -116,6 +119,7 @@ def critique_node(state: WorkflowState) -> WorkflowState:
 
 def revise_node(state: WorkflowState) -> WorkflowState:
     """Revise the draft using critique instructions."""
+    # Revision node applies explicit critique feedback as constraints.
     current_text = state.get("revised", state["draft"])
     revised = ask_ollama_structured(
         user_prompt=f"""
@@ -156,6 +160,7 @@ def should_revise(state: WorkflowState) -> str:
     )
     revision_count = state["revision_count"]
 
+    # MIN_REVISIONS guarantees students can observe at least one loop.
     force_demo_loop = revision_count < MIN_REVISIONS
     should_continue = (model_says_revise or has_feedback or force_demo_loop) and revision_count < MAX_REVISIONS
 
@@ -174,6 +179,7 @@ def build_graph():
 
     graph.add_edge(START, "draft")
     graph.add_edge("draft", "critique")
+    # This conditional edge is the core evaluator/reflection control point.
     graph.add_conditional_edges(
         "critique",
         should_revise,
@@ -183,6 +189,7 @@ def build_graph():
         },
     )
     graph.add_edge("revise", "critique")
+    # Exit only when quality is acceptable or max loops reached.
     graph.add_edge("finalize", END)
 
     return graph.compile()
@@ -202,7 +209,7 @@ def prompt_for_task(default_task: str = DEFAULT_TASK) -> str:
 
 if __name__ == "__main__":
     print_header("12 - EVALUATOR / CRITIQUE / REFLECTION")
-    print("Builds on: 08_prompt_chaining.py, 09_routing.py, 11_orchestrator_worker.py")
+    print("Builds on: 08_prompt_chaining.py, 09_routing.py, 10_orchestrator_worker.py")
     print("New concept: quality control with explicit critique and revision")
     print(
         f"Speed mode: {'FAST' if FAST_MODE else 'FULL'} | "

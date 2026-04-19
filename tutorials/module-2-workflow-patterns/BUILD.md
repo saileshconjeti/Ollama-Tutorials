@@ -20,9 +20,9 @@ Run from repository root.
 ```bash
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/09_routing.py
-python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py
-python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
-python tutorials/module-2-workflow-patterns/13_tool_calling.py
+python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
+python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
+python tutorials/module-2-workflow-patterns/12_tool_calling.py
 ```
 
 ## Prompt Chaining CLI Arguments (`08_prompt_chaining.py`)
@@ -43,7 +43,7 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutoria
 - Feature request: "Please add bulk invoice export."
 - Praise/general feedback: "Onboarding was smooth and support was excellent."
 
-## Orchestrator-Worker Demo Controls (`11_orchestrator_worker.py`)
+## Orchestrator-Worker Demo Controls (`10_orchestrator_worker.py`)
 
 - input is interactive (press Enter to use default topic)
 - optional env vars:
@@ -54,10 +54,10 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutoria
 Example:
 
 ```bash
-OW_FAST_MODE=1 OW_WORKER_MODEL=qwen3:0.6b python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py
+OW_FAST_MODE=1 OW_WORKER_MODEL=qwen3:0.6b python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
 ```
 
-## Evaluator-Reflection Demo Controls (`12_evaluator_reflection.py`)
+## Evaluator-Reflection Demo Controls (`11_evaluator_reflection.py`)
 
 - input is interactive (press Enter to use default task)
 - default writer model: `qwen3:0.6b`
@@ -71,10 +71,10 @@ OW_FAST_MODE=1 OW_WORKER_MODEL=qwen3:0.6b python tutorials/module-2-workflow-pat
 Example:
 
 ```bash
-ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen2.5:0.5b python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
+ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen2.5:0.5b python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
 ```
 
-## Tool Calling Bridge (`13_tool_calling.py`)
+## Tool Calling Bridge (`12_tool_calling.py`)
 
 - place this last to bridge from workflow patterns to full agents
 - shows the app-controlled tool loop:
@@ -85,7 +85,7 @@ ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen
 Example:
 
 ```bash
-python tutorials/module-2-workflow-patterns/13_tool_calling.py
+python tutorials/module-2-workflow-patterns/12_tool_calling.py
 ```
 
 ## Expected Student Observations

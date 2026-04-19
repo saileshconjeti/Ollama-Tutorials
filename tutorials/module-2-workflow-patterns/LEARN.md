@@ -26,18 +26,18 @@ By the end of this class, students should be able to:
 - use route-specific model strategy
 - merge structured outputs into final response
 
-3. Orchestrator-Worker (`11_orchestrator_worker.py`)
+3. Orchestrator-Worker (`10_orchestrator_worker.py`)
 - orchestrator creates a structured work plan
 - workers execute narrow responsibilities in parallel graph branches
 - synthesis combines worker outputs into one final recommendation
 
-4. Evaluator-Reflection (`12_evaluator_reflection.py`)
+4. Evaluator-Reflection (`11_evaluator_reflection.py`)
 - draft is generated first
 - critique evaluates clarity, completeness, actionability, and tone
 - revision loop applies feedback with configurable min/max loop counts
 - final output is selected after quality checks
 
-5. Tool Calling Bridge (`13_tool_calling.py`)
+5. Tool Calling Bridge (`12_tool_calling.py`)
 - model proposes a tool call from a provided schema
 - application executes the requested tool deterministically
 - model consumes tool result and produces final response
@@ -55,7 +55,7 @@ By the end of this class, students should be able to:
 
 - `08_prompt_chaining.py`
 - `09_routing.py`
-- `11_orchestrator_worker.py`
-- `12_evaluator_reflection.py`
-- `13_tool_calling.py`
+- `10_orchestrator_worker.py`
+- `11_evaluator_reflection.py`
+- `12_tool_calling.py`
 - `workflow_utils.py`

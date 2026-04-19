@@ -11,9 +11,9 @@ Module: **Module 2**
 
 - `08_prompt_chaining.py`: Multi-step prompt chain with structured intermediate state
 - `09_routing.py`: Classification-based routing to specialized handlers/LLMs
-- `11_orchestrator_worker.py`: One orchestrator delegates to specialized workers and synthesizes outputs
-- `12_evaluator_reflection.py`: Critique-revise loop with explicit quality control
-- `13_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
+- `10_orchestrator_worker.py`: One orchestrator delegates to specialized workers and synthesizes outputs
+- `11_evaluator_reflection.py`: Critique-revise loop with explicit quality control
+- `12_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
 
 ## Run Order
 
@@ -22,9 +22,9 @@ From repo root:
 ```bash
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/09_routing.py
-python tutorials/module-2-workflow-patterns/11_orchestrator_worker.py
-python tutorials/module-2-workflow-patterns/12_evaluator_reflection.py
-python tutorials/module-2-workflow-patterns/13_tool_calling.py
+python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
+python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
+python tutorials/module-2-workflow-patterns/12_tool_calling.py
 ```
 
 ## Prompt Chaining Arguments (`08_prompt_chaining.py`)
