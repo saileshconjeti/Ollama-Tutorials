@@ -37,6 +37,7 @@ PRAISE_MODEL = "qwen3:4b"
 
 
 class RouteDecision(BaseModel):
+    # Classifier output used for branching.
     category: Literal["bug_report", "feature_request", "praise_or_general_feedback"]
     confidence: float
     rationale: str
@@ -53,6 +54,7 @@ class HandlerOutput(BaseModel):
 
 
 class WorkflowState(TypedDict, total=False):
+    # LangGraph shared state keys passed between nodes.
     user_message: str
     route_decision: dict
     handler_output: dict
@@ -61,6 +63,7 @@ class WorkflowState(TypedDict, total=False):
 
 def classify_node(state: WorkflowState) -> WorkflowState:
     """Classify a customer review into one of three support routes."""
+    # First step in graph: produce a strict route label.
     decision = ask_ollama_structured(
         user_prompt=f"""
         Classify the message into one of:
@@ -142,6 +145,7 @@ def praise_handler_node(state: WorkflowState) -> WorkflowState:
 
 def final_node(state: WorkflowState) -> WorkflowState:
     """Create a human-facing answer from structured downstream state."""
+    # Final node formats internal structured data for an operator-friendly view.
     route = state["route_decision"]
     output = state["handler_output"]
 
@@ -159,6 +163,7 @@ def final_node(state: WorkflowState) -> WorkflowState:
 
 def choose_route(state: WorkflowState) -> str:
     """Map RouteDecision to the next node name."""
+    # This function drives conditional edges in the graph.
     category = state["route_decision"]["category"]
     if category == "bug_report":
         return "bug_handler"
@@ -177,6 +182,7 @@ def build_graph():
     graph.add_node("final", final_node)
 
     graph.add_edge(START, "classify")
+    # Route dynamically based on classifier output.
     graph.add_conditional_edges(
         "classify",
         choose_route,
@@ -213,6 +219,7 @@ if __name__ == "__main__":
 
     app = build_graph()
     user_review = prompt_for_review()
+    # Single invoke call executes classify -> chosen handler -> final.
     result = app.invoke({"user_message": user_review})
 
     print_subheader("ROUTE DECISION")

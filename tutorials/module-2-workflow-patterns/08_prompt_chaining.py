@@ -30,6 +30,7 @@ DEFAULT_OUTPUT_FILE = "meeting_minutes_output.md"
 
 
 class MeaningfulMinutes(BaseModel):
+    # Structured output from chain step 1.
     meeting_title: str
     meeting_purpose: str
     key_decisions: List[str]
@@ -45,6 +46,7 @@ class ActionItem(BaseModel):
 
 
 class MeetingActionPlan(BaseModel):
+    # Structured output from chain step 2.
     overall_goal: str
     actions: List[ActionItem]
     immediate_next_step: str
@@ -58,6 +60,7 @@ def read_minutes_file(path_text: str | Path) -> str:
 
 def build_minutes_input(cli_file: str | None = None) -> str:
     """Load minutes from a text file only."""
+    # This keeps I/O simple for students: one source of truth is a .txt file.
     if cli_file:
         return read_minutes_file(cli_file)
 
@@ -84,6 +87,8 @@ def step_1_make_meaningful_minutes(raw_minutes: str) -> MeaningfulMinutes:
 
 def step_2_create_action_plan(minutes: MeaningfulMinutes) -> MeetingActionPlan:
     """Step 2: Create a clear action plan from structured minutes."""
+    # Prompt chaining core idea:
+    # pass validated JSON from step 1 into step 2.
     return ask_ollama_structured(
         user_prompt=f"""
         Build a practical action plan from the meeting minutes below.
@@ -101,6 +106,7 @@ def build_markdown_output(
     plan: MeetingActionPlan,
 ) -> str:
     """Build markdown output for sharing and review."""
+    # Convert structured objects into a human-friendly report format.
     key_decisions = "\n".join(f"- {item}" for item in minutes.key_decisions)
     important_updates = "\n".join(f"- {item}" for item in minutes.important_updates)
     open_questions = "\n".join(f"- {item}" for item in minutes.open_questions)
@@ -170,9 +176,11 @@ if __name__ == "__main__":
 
     raw_minutes = build_minutes_input(cli_file=args.file)
 
+    # Chain step 1 -> step 2 with typed intermediate state.
     meaningful_minutes = step_1_make_meaningful_minutes(raw_minutes)
     action_plan = step_2_create_action_plan(meaningful_minutes)
 
+    # Final step: persist the chain output for review/sharing.
     markdown_report = build_markdown_output(meaningful_minutes, action_plan)
     saved_path = write_markdown_output(markdown_report, args.output)
     print_subheader("OUTPUT SAVED")
