@@ -11,6 +11,9 @@ By the end of this class, students should be able to:
 - explain orchestrator-worker delegation with specialized worker roles
 - explain evaluator-reflection loops for iterative quality improvement
 - explain how tool calling bridges workflow patterns to agentic control loops
+- explain MCP as a remote tool provider pattern for agent workflows
+- explain schema introspection and argument-key adaptation for robust tool invocation
+- explain how to compose structured LLM output with MCP-backed application actions
 - inspect and reason about intermediate workflow state
 
 ## Concept Map
@@ -43,6 +46,21 @@ By the end of this class, students should be able to:
 - model consumes tool result and produces final response
 - implementation uses `ask_ollama_structured(...)` from `workflow_utils.py`
 
+6. MCP Tool Discovery (`13_mcp_list_tools.py`)
+- connect to an MCP server over authenticated transport
+- list available tools and descriptions before execution
+- treat discovery as a prerequisite to reliable tool calling
+
+7. Direct MCP Tool Call (`14_mcp_direct_tool_call.py`)
+- inspect tool input schemas to detect real parameter names at runtime
+- run a preflight parent-page access check before creating resources
+- create a Notion page, retrieve metadata, and print shareable URL
+
+8. Qwen + MCP Writer (`15_mcp_qwen_notion_writer.py`)
+- generate structured content (`doc` or `tasks`) with validated schema output
+- render model output into markdown for deterministic downstream writing
+- create a page and append generated markdown via MCP, then resolve page link
+
 ## Why This Matters
 
 - Reliability: explicit state and schema validation reduce ambiguity
@@ -51,6 +69,8 @@ By the end of this class, students should be able to:
 - Quality: critique-revise loops make improvement explicit and measurable
 - Separation of concerns: using a different critique model can reduce self-evaluation bias
 - Agent-readiness: tool-calling connects workflow design to app-driven agent loops
+- Integration-readiness: MCP connects local workflow code to external SaaS tools (Notion via Zapier)
+- Robustness: schema-aware argument mapping reduces brittle connector assumptions
 
 ## Files Covered
 
@@ -59,5 +79,8 @@ By the end of this class, students should be able to:
 - `10_orchestrator_worker.py`
 - `11_evaluator_reflection.py`
 - `12_tool_calling.py`
+- `13_mcp_list_tools.py`
+- `14_mcp_direct_tool_call.py`
+- `15_mcp_qwen_notion_writer.py`
 - `workflow_utils.py`
 - root `requirements.txt` (shared by all modules)

@@ -1,6 +1,8 @@
 # Python virtual environment
 .venv/
 **/.venv/
+.venv*/
+**/.venv*/
 
 # Python cache
 __pycache__/
@@ -14,3 +16,8 @@ __pycache__/
 .vscode/*
 !.vscode/settings.json
 .idea/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example

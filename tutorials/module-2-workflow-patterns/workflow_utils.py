@@ -5,6 +5,10 @@
 #                `pip install -r requirements.txt`
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
+#
+# Used across module-2 scripts including:
+# - 08-12 for core workflow patterns
+# - 15 for Qwen structured generation before MCP-based Notion writing
 
 from __future__ import annotations
 
@@ -94,6 +98,10 @@ def ask_ollama_structured(
     1. ask for structured output
     2. validate
     3. retry with the error message if needed
+
+    In later module examples, this validated output is passed into
+    external tool workflows (for example, writing structured content
+    into Notion through MCP).
     """
     schema_dict = schema_model.model_json_schema()
     prompt = textwrap.dedent(

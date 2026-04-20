@@ -31,6 +31,9 @@ source .venv/bin/activate
 - `10_orchestrator_worker.py`: One orchestrator delegates to specialized workers and synthesizes outputs
 - `11_evaluator_reflection.py`: Critique-revise loop with explicit quality control
 - `12_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
+- `13_mcp_list_tools.py`: Connect to MCP and discover available Zapier tools
+- `14_mcp_direct_tool_call.py`: Direct MCP tool invocation to create and retrieve a Notion page
+- `15_mcp_qwen_notion_writer.py`: Generate structured content with Qwen and write it to Notion via MCP
 - `workflow_utils.py`: Shared helper utilities (`ask_ollama_structured`, printing, JSON fallback parse)
 
 ## Run Order
@@ -43,6 +46,17 @@ python tutorials/module-2-workflow-patterns/09_routing.py
 python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
 python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
 python tutorials/module-2-workflow-patterns/12_tool_calling.py
+python tutorials/module-2-workflow-patterns/13_mcp_list_tools.py
+python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
+python tutorials/module-2-workflow-patterns/15_mcp_qwen_notion_writer.py
+```
+
+For tutorials `13-15`, set these `.env` variables:
+
+```dotenv
+ZAPIER_MCP_URL=...
+ZAPIER_MCP_API_KEY=...
+NOTION_PARENT_PAGE_ID=...
 ```
 
 ## Prompt Chaining Arguments (`08_prompt_chaining.py`)
@@ -66,3 +80,6 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutoria
 - Route requests based on classification and inspect graph state
 - Use critique-revision loops for measurable output improvement
 - Bridge workflow patterns into app-executed tool loops
+- Discover and adapt to MCP tool schemas dynamically
+- Add robust external-tool preflight checks and permission-aware error handling
+- Compose LLM structured output with MCP tools for end-to-end automation

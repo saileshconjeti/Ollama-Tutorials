@@ -19,6 +19,11 @@ This material was prepared with assistance from **OpenAI Codex**, and every file
   - Theory: [LEARN.md](tutorials/module-2-workflow-patterns/LEARN.md)
   - Code Walkthrough: [BUILD.md](tutorials/module-2-workflow-patterns/BUILD.md)
 
+Module 2 now includes MCP + Notion integration tutorials:
+- `13_mcp_list_tools.py`
+- `14_mcp_direct_tool_call.py`
+- `15_mcp_qwen_notion_writer.py`
+
 ## Repository Organization
 
 - `tutorials/module-1-generative-ai-basics-prompting-and-rag/`
@@ -141,6 +146,20 @@ Check installed models:
 ```bash
 ollama list
 ```
+
+## MCP + Notion Environment (Module 2 Tutorials 13-15)
+
+To run MCP tutorials in `tutorials/module-2-workflow-patterns/13-15`, add these to `.env`:
+
+```dotenv
+ZAPIER_MCP_URL=...
+ZAPIER_MCP_API_KEY=...
+NOTION_PARENT_PAGE_ID=...
+```
+
+Notes:
+- `NOTION_PARENT_PAGE_ID` can be either a Notion page ID or a full Notion page URL (tutorial `14` normalizes both formats).
+- Ensure the Zapier integration has access to that parent page in Notion (`Share` -> invite integration).
 
 ## Open WebUI Setup (Optional)
 
