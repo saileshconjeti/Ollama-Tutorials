@@ -18,6 +18,9 @@ This material was prepared with assistance from **OpenAI Codex**, and every file
 - **Module 2**: [Workflow Patterns](MODULE_2_WORKFLOW_PATTERNS.md)
   - Theory: [LEARN.md](tutorials/module-2-workflow-patterns/LEARN.md)
   - Code Walkthrough: [BUILD.md](tutorials/module-2-workflow-patterns/BUILD.md)
+- **Module 3**: [AI Agents](MODULE_3_AI_AGENTS.md)
+  - Theory: [LEARN.md](tutorials/module-3-ai-agents/LEARN.md)
+  - Code Walkthrough: [BUILD.md](tutorials/module-3-ai-agents/BUILD.md)
 
 Module 2 now includes MCP + Notion integration tutorials:
 - `13_mcp_list_tools.py`
@@ -28,6 +31,7 @@ Module 2 now includes MCP + Notion integration tutorials:
 
 - `tutorials/module-1-generative-ai-basics-prompting-and-rag/`
 - `tutorials/module-2-workflow-patterns/`
+- `tutorials/module-3-ai-agents/`
 - `requirements.txt`
 - `README.md`
 
