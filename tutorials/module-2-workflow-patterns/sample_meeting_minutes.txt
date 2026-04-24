@@ -1,13 +1,13 @@
-Meeting: Weekly Product and Growth Sync
+Meeting: Computer Science Capstone Team Check-in
 Date: April 16, 2026
-Attendees: Priya, Marco, Jen, Ali, QA Lead
+Attendees: Aisha, Rohan, Miguel, Fatima, Faculty Mentor
 
-- Onboarding drop-off remains high at step 3 (~38%).
-- Team agreed to reduce signup form fields from 12 to 7.
-- Marco will share the revised signup form draft by April 22, 2026.
-- Jen requested new homepage headline and CTA copy by April 21, 2026.
-- Legal review is required before publishing customer testimonials.
-- Priya reported trial-to-paid conversion improved from 4.8% to 5.6%.
-- Open question: run A/B test first or do a full rollout.
-- QA requested a clear release checklist before launch.
+- Team agreed the capstone focus will be an AI study assistant for first-year students.
+- Aisha shared updated user interview notes from 12 student participants.
+- Rohan will finalize the backend API schema by April 22, 2026.
+- Miguel will deliver the first wireframe set for the mobile dashboard by April 21, 2026.
+- Fatima reported the model prototype now answers syllabus questions with about 81% accuracy.
+- Faculty mentor asked the team to define evaluation metrics before the April 30, 2026 progress review.
+- Open question: should the first demo include personalized recommendations or only Q&A.
+- Team flagged a risk that testing data is still incomplete for two core courses.
 - Next meeting scheduled for April 23, 2026.

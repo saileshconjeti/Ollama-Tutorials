@@ -1,5 +1,5 @@
 """
-13_tool_use_pattern.py
+12_tool_calling.py
 
 Builds on:
 - 07_tool_calling.py
@@ -20,7 +20,7 @@ Pattern:
 4. Produce the final answer
 
 Run:
-    python 13_tool_use_pattern.py
+    python 12_tool_calling.py
 """
 
 from __future__ import annotations
@@ -51,6 +51,7 @@ if not SAMPLE_FILE.exists():
 
 
 DEFAULT_QUERY = "Read the local course note and tell me the two most important reminders."
+DEFAULT_MODEL = "qwen3:4b"
 
 
 # -------------------------------------------------------------------
@@ -160,7 +161,12 @@ def get_user_query() -> str:
     return query
 
 
-def decide_tool(query: str) -> ToolDecision:
+def get_active_model() -> str:
+    """Resolve the model used for this run."""
+    return DEFAULT_MODEL
+
+
+def decide_tool(query: str, model: str) -> ToolDecision:
     """Ask the model whether a tool is needed."""
     # Keep the decision schema tight so routing stays deterministic in app code.
     prompt = f"""
@@ -176,13 +182,28 @@ Available tools:
 - study_time_estimate
 - none
 
+Rules:
+- Return one best tool only.
+- If needs_tool is false, tool_name must be "none".
+- If needs_tool is true, tool_name must not be "none".
+
 User request:
 {query}
 """
-    return ask_ollama_structured(prompt, ToolDecision)
+    decision = ask_ollama_structured(prompt, ToolDecision, model=model)
+    return normalize_decision(decision)
 
 
-def build_tool_invocation(query: str, decision: ToolDecision) -> ToolInvocation:
+def normalize_decision(decision: ToolDecision) -> ToolDecision:
+    """Enforce consistency between `needs_tool` and `tool_name`."""
+    if not decision.needs_tool:
+        return ToolDecision(needs_tool=False, tool_name="none", reason=decision.reason)
+    if decision.tool_name == "none":
+        return ToolDecision(needs_tool=False, tool_name="none", reason=decision.reason)
+    return decision
+
+
+def build_tool_invocation(query: str, decision: ToolDecision, model: str) -> ToolInvocation:
     """Ask the model to construct the tool call."""
     # We constrain arguments per tool so execution can remain safe and predictable.
     prompt = f"""
@@ -198,6 +219,7 @@ Useful local file path if needed:
 {str(SAMPLE_FILE)}
 
 Rules:
+- Use exactly this chosen tool: {decision.tool_name}
 - For calculator_add, provide arguments: a, b
 - For calculator_multiply, provide arguments: a, b
 - For read_file, provide argument: path
@@ -206,7 +228,15 @@ Rules:
 - For keyword_check, provide arguments: text, keyword
 - For study_time_estimate, provide arguments: topics, minutes_per_topic
 """
-    return ask_ollama_structured(prompt, ToolInvocation)
+    invocation = ask_ollama_structured(prompt, ToolInvocation, model=model)
+    if invocation.tool_name != decision.tool_name:
+        print_subheader("Invocation Warning")
+        print(
+            f"Model changed tool from '{decision.tool_name}' to '{invocation.tool_name}'. "
+            f"Overriding to '{decision.tool_name}'."
+        )
+        invocation = ToolInvocation(tool_name=decision.tool_name, arguments=invocation.arguments)
+    return invocation
 
 
 def execute_tool(invocation: ToolInvocation) -> ToolResult:
@@ -219,26 +249,31 @@ def execute_tool(invocation: ToolInvocation) -> ToolResult:
     print("Arguments:")
     print(pretty_json(args))
 
-    # Parse schema arguments to concrete Python types before calling each tool.
-    if tool_name == "calculator_add":
-        output = calculator_add(float(args["a"]), float(args["b"]))
-    elif tool_name == "calculator_multiply":
-        output = calculator_multiply(float(args["a"]), float(args["b"]))
-    elif tool_name == "read_file":
-        output = read_file(str(args["path"]))
-    elif tool_name == "count_words":
-        output = count_words(str(args["text"]))
-    elif tool_name == "get_day_name":
-        output = get_day_name(str(args["date_text"]))
-    elif tool_name == "keyword_check":
-        output = keyword_check(str(args["text"]), str(args["keyword"]))
-    elif tool_name == "study_time_estimate":
-        output = study_time_estimate(
-            int(args["topics"]),
-            int(args["minutes_per_topic"]),
-        )
-    else:
-        output = f"ERROR: Unsupported tool: {tool_name}"
+    try:
+        # Parse schema arguments to concrete Python types before calling each tool.
+        if tool_name == "calculator_add":
+            output = calculator_add(float(args["a"]), float(args["b"]))
+        elif tool_name == "calculator_multiply":
+            output = calculator_multiply(float(args["a"]), float(args["b"]))
+        elif tool_name == "read_file":
+            output = read_file(str(args["path"]))
+        elif tool_name == "count_words":
+            output = count_words(str(args["text"]))
+        elif tool_name == "get_day_name":
+            output = get_day_name(str(args["date_text"]))
+        elif tool_name == "keyword_check":
+            output = keyword_check(str(args["text"]), str(args["keyword"]))
+        elif tool_name == "study_time_estimate":
+            output = study_time_estimate(
+                int(args["topics"]),
+                int(args["minutes_per_topic"]),
+            )
+        else:
+            output = f"ERROR: Unsupported tool: {tool_name}"
+    except KeyError as exc:
+        output = f"ERROR: Missing required argument for {tool_name}: {exc}"
+    except ValueError as exc:
+        output = f"ERROR: Invalid argument type for {tool_name}: {exc}"
 
     print_subheader("VISIBLE TOOL RESULT")
     print(output)
@@ -246,7 +281,7 @@ def execute_tool(invocation: ToolInvocation) -> ToolResult:
     return ToolResult(tool_name=tool_name, output=output)
 
 
-def create_final_answer(query: str, tool_result: ToolResult) -> FinalAnswer:
+def create_final_answer(query: str, tool_result: ToolResult, model: str) -> FinalAnswer:
     """Ask the model to produce the final user-facing answer."""
     prompt = f"""
 Answer the user's request clearly.
@@ -257,7 +292,7 @@ User request:
 Tool result:
 {tool_result.model_dump_json(indent=2)}
 """
-    return ask_ollama_structured(prompt, FinalAnswer)
+    return ask_ollama_structured(prompt, FinalAnswer, model=model)
 
 
 # -------------------------------------------------------------------
@@ -265,16 +300,18 @@ Tool result:
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print_header("13 - Tool Use Pattern")
+    print_header("12 - Tool Calling")
     print("Pattern: let the model decide when to use a tool")
     print("Why it matters: combine language with reliable local actions")
+    active_model = get_active_model()
+    print(f"Model in use: {active_model}")
 
     user_query = get_user_query()
 
     print_subheader("User Query")
     print(user_query)
 
-    decision = decide_tool(user_query)
+    decision = decide_tool(user_query, active_model)
     print_subheader("Tool Decision")
     print(pretty_json(decision))
 
@@ -283,7 +320,7 @@ if __name__ == "__main__":
         print_subheader("Final")
         print("No tool was needed.")
     else:
-        invocation = build_tool_invocation(user_query, decision)
+        invocation = build_tool_invocation(user_query, decision, active_model)
         print_subheader("Tool Invocation")
         print(pretty_json(invocation))
 
@@ -291,6 +328,6 @@ if __name__ == "__main__":
         print_subheader("Structured Tool Result")
         print(pretty_json(tool_result))
 
-        final_answer = create_final_answer(user_query, tool_result)
+        final_answer = create_final_answer(user_query, tool_result, active_model)
         print_subheader("Final Answer")
         print(pretty_json(final_answer))

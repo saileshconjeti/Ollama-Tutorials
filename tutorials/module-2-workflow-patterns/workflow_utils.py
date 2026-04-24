@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import textwrap
 from typing import Any, Type, TypeVar
@@ -23,7 +22,7 @@ from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
-DEFAULT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "qwen3:4b")
+DEFAULT_MODEL = "qwen3:4b"
 
 
 def print_header(title: str) -> None:

@@ -1,29 +1,32 @@
 # Meaningful Meeting Minutes
 
 ## Meeting Details
-- **Meeting Title:** Weekly Product and Growth Sync
-- **Purpose:** To review current product metrics, address onboarding challenges, and align on next steps for growth initiatives.
+- **Meeting Title:** Meeting Title
+- **Purpose:** To review and discuss the AI study assistant focus for first-year students in Computer Science.
 
 ## Key Decisions
-- Reduce signup form fields from 12 to 7
-- Legal review required before publishing customer testimonials
+- Team agreed on an AI study assistant focusing on initial questions from first-year students.
+- Aisha shared updated user interview notes from 12 student participants.
+- Rohan will finalize the backend API schema by April 22, 2026.
+- Miguel will deliver the first wireframe set for the mobile dashboard by April 21, 2026.
+- Fatima reported that the model prototype now answers syllabus questions with about 81% accuracy.
 
 ## Important Updates
-- Onboarding drop-off remains high at step 3 (~38%)
-- Trial-to-paid conversion improved from 4.8% to 5.6%
+- Rohan clarified that personalization in the demo should be included if necessary
+- Miguel mentioned a testing data incomplete issue for two core courses
 
 ## Open Questions
-- Should we run an A/B test first or proceed with a full rollout?
+- Should first demos include personalized recommendations or just Q&A?
+- Is there any risk of testing data being incomplete?
 
 # Action Plan
 
 ## Overall Goal
-Address onboarding challenges and improve product metrics to drive growth initiatives.
+To review and discuss the AI study assistant focus for first-year students in Computer Science.
 
 ## Immediate Next Step
-Determine whether to run an A/B test first or proceed with full rollout
+Develop a practical action plan from the meeting minutes.
 
 ## Action Items
-- **Owner:** Product Team | **Action:** Reduce signup form fields from 12 to 7 | **Due:** TBD | **Priority:** high
-- **Owner:** Legal Team | **Action:** Complete legal review for customer testimonials | **Due:** TBD | **Priority:** medium
-- **Owner:** Product Team | **Action:** Investigate causes of high onboarding drop-off at step 3 (38%) | **Due:** TBD | **Priority:** high
+- **Owner:** Rohan | **Action:** Finalize the backend API schema by April 22, 2026. | **Due:** April 22, 2026 | **Priority:** high
+- **Owner:** Fatima | **Action:** Report that the model prototype now answers syllabus questions with about 81% accuracy. | **Due:** April 21, 2026 | **Priority:** medium
