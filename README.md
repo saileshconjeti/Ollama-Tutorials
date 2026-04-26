@@ -26,6 +26,7 @@ Module 2 now includes MCP + Notion integration tutorials:
 - `13_mcp_list_tools.py`
 - `14_mcp_direct_tool_call.py`
 - `15_mcp_qwen_notion_writer.py`
+- `15_mcp_groq_notion_writer.py`
 
 ## Repository Organization
 

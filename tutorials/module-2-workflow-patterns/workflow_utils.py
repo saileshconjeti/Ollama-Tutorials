@@ -13,16 +13,23 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import textwrap
 from typing import Any, Type, TypeVar
 
-from ollama import chat
+from dotenv import load_dotenv
+from groq import BadRequestError, Groq
+from ollama import chat as ollama_chat
 from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
-DEFAULT_MODEL = "qwen3:4b"
+load_dotenv()
+
+DEFAULT_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+DEFAULT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "qwen3:4b")
+DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 def print_header(title: str) -> None:
@@ -66,20 +73,121 @@ def extract_json_block(text: str) -> str:
     raise ValueError("Could not find a JSON block in model output.")
 
 
+def _looks_like_ollama_model(model: str) -> bool:
+    """Heuristic: Ollama model names commonly include a colon tag."""
+    return ":" in model
+
+
+def _resolve_provider(provider: str | None) -> str:
+    selected = (provider or DEFAULT_PROVIDER).lower()
+    if selected not in {"ollama", "groq"}:
+        return "ollama"
+    return selected
+
+
+def _resolve_model_for_provider(provider: str, model: str) -> str:
+    """
+    Keep existing Module-2 defaults working across providers.
+    If Groq is selected but an Ollama-style model name is passed,
+    use GROQ_MODEL unless the caller supplied a Groq-style name.
+    """
+    if provider == "groq" and _looks_like_ollama_model(model):
+        return DEFAULT_GROQ_MODEL
+    return model
+
+
+def _call_text(
+    *,
+    messages: list[dict[str, str]],
+    provider: str,
+    model: str,
+) -> str:
+    if provider == "groq":
+        api_key = os.getenv("GROQ_API_KEY", "").strip()
+        if not api_key:
+            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.2,
+        )
+        return response.choices[0].message.content or ""
+
+    response = ollama_chat(
+        model=model,
+        messages=messages,
+        options={"temperature": 0.2},
+    )
+    return response["message"]["content"]
+
+
+def _call_structured(
+    *,
+    messages: list[dict[str, str]],
+    provider: str,
+    model: str,
+    schema_dict: dict[str, Any],
+) -> str:
+    if provider == "groq":
+        api_key = os.getenv("GROQ_API_KEY", "").strip()
+        if not api_key:
+            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+        client = Groq(api_key=api_key)
+        schema_instruction = {
+            "role": "system",
+            "content": (
+                "Return only valid JSON. The output must match this JSON Schema exactly:\n"
+                f"{json.dumps(schema_dict)}"
+            ),
+        }
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[schema_instruction, *messages],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            return response.choices[0].message.content or "{}"
+        except BadRequestError as exc:
+            # Groq can reject the request when server-side JSON validation fails,
+            # but still include a near-JSON candidate in `failed_generation`.
+            # Return that text so our existing parse/validate/retry loop can repair it.
+            payload = getattr(exc, "body", None)
+            if isinstance(payload, dict):
+                error_obj = payload.get("error")
+                if isinstance(error_obj, dict):
+                    failed_generation = error_obj.get("failed_generation")
+                    if isinstance(failed_generation, str) and failed_generation.strip():
+                        return failed_generation
+            raise
+
+    response = ollama_chat(
+        model=model,
+        messages=messages,
+        format=schema_dict,
+        options={"temperature": 0},
+    )
+    return response["message"]["content"]
+
+
 def ask_ollama_text(
     user_prompt: str,
     system_prompt: str = "You are a precise teaching assistant.",
     model: str = DEFAULT_MODEL,
+    provider: str | None = None,
 ) -> str:
-    """Call Ollama for a normal text response."""
-    response = chat(
-        model=model,
+    """Legacy helper name kept for compatibility; now supports Ollama or Groq."""
+    selected_provider = _resolve_provider(provider)
+    selected_model = _resolve_model_for_provider(selected_provider, model)
+    return _call_text(
+        provider=selected_provider,
+        model=selected_model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
     )
-    return response["message"]["content"]
 
 
 def ask_ollama_structured(
@@ -87,6 +195,7 @@ def ask_ollama_structured(
     schema_model: Type[T],
     system_prompt: str = "You are a precise teaching assistant that returns valid JSON only.",
     model: str = DEFAULT_MODEL,
+    provider: str | None = None,
     max_retries: int = 2,
 ) -> T:
     """
@@ -103,6 +212,8 @@ def ask_ollama_structured(
     into Notion through MCP).
     """
     schema_dict = schema_model.model_json_schema()
+    selected_provider = _resolve_provider(provider)
+    selected_model = _resolve_model_for_provider(selected_provider, model)
     prompt = textwrap.dedent(
         f"""
         Return output that matches this JSON schema exactly.
@@ -118,16 +229,15 @@ def ask_ollama_structured(
     last_error: Exception | None = None
 
     for attempt in range(1, max_retries + 2):
-        response = chat(
-            model=model,
+        raw_text = _call_structured(
+            provider=selected_provider,
+            model=selected_model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ],
-            format=schema_dict,
+            schema_dict=schema_dict,
         )
-
-        raw_text = response["message"]["content"]
 
         try:
             return schema_model.model_validate_json(raw_text)

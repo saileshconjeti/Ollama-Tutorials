@@ -32,8 +32,9 @@ source .venv/bin/activate
 - `11_evaluator_reflection.py`: Critique-revise loop with explicit quality control
 - `12_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
 - `13_mcp_list_tools.py`: Connect to MCP and discover available Zapier tools
-- `14_mcp_direct_tool_call.py`: Direct MCP tool invocation to create and retrieve a Notion page
-- `15_mcp_qwen_notion_writer.py`: Generate structured content with Qwen and write it to Notion via MCP
+- `14_mcp_direct_tool_call.py`: Direct MCP tool invocation to create/retrieve a Notion page with runtime tool-mode compatibility
+- `15_mcp_qwen_notion_writer.py`: Qwen-based MCP Notion writer variant
+- `15_mcp_groq_notion_writer.py`: Groq-based MCP Notion writer variant (recommended for cloud workflow demos)
 - `workflow_utils.py`: Shared helper utilities (`ask_ollama_structured`, printing, JSON fallback parse)
 
 ## Run Order
@@ -49,6 +50,7 @@ python tutorials/module-2-workflow-patterns/12_tool_calling.py
 python tutorials/module-2-workflow-patterns/13_mcp_list_tools.py
 python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
 python tutorials/module-2-workflow-patterns/15_mcp_qwen_notion_writer.py
+python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
 ```
 
 For tutorials `13-15`, set these `.env` variables:
@@ -58,6 +60,10 @@ ZAPIER_MCP_URL=...
 ZAPIER_MCP_API_KEY=...
 NOTION_PARENT_PAGE_ID=...
 ```
+
+Notes for current Zapier MCP behavior:
+- Scripts auto-handle both legacy per-app tools (`notion_create_page`, etc.) and generic execute tools (`execute_zapier_read_action` / `execute_zapier_write_action`).
+- If `create_page` returns a follow-up confirmation prompt, the scripts auto-retry with explicit defaults so classroom runs remain non-interactive.
 
 ## Prompt Chaining Arguments (`08_prompt_chaining.py`)
 

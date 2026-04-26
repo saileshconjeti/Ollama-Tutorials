@@ -1,30 +1,34 @@
 # Meaningful Meeting Minutes
 
 ## Meeting Details
-- **Meeting Title:** Weekly Product and Growth Sync
-- **Purpose:** Review product metrics, address onboarding challenges, and coordinate upcoming releases.
+- **Meeting Title:** Computer Science Capstone Team Check-in
+- **Purpose:** Capstone project focus discussion and progress review
 
 ## Key Decisions
-- Team agreed to reduce signup form fields from 12 to 7
-- Legal review required before publishing customer testimonials
+- The capstone focus will be an AI study assistant for first-year students.
+- Rohan will finalize the backend API schema by April 22, 2026.
+- Miguel will deliver the first wireframe set for the mobile dashboard by April 21, 2026.
+- The model prototype now answers syllabus questions with about 81% accuracy.
 
 ## Important Updates
-- On:boarding drop-off remains high at step 3 (~38%)
-- Trial-to-paid conversion improved from 4.8% to 5.6%
+- Aisha shared updated user interview notes from 12 student participants.
+- Faculty mentor asked the team to define evaluation metrics before the April 30, 2026 progress review.
 
 ## Open Questions
-- Should we run an A/B test first or proceed with a full rollout?
+- Should the first demo include personalized recommendations or only Q&A?
 
 # Action Plan
 
 ## Overall Goal
-Address onboarding challenges and coordinate upcoming product releases based on recent metrics.
+AI study assistant for first-year students
 
 ## Immediate Next Step
-Complete legal review for customer testimonials
+Finalize backend API schema and deliver first wireframe set for mobile dashboard
 
 ## Action Items
-- **Owner:** Product Team | **Action:** Reduce signup form fields from 12 to 7 | **Due:** TBD | **Priority:** medium
-- **Owner:** Legal Team | **Action:** Complete legal review for customer testimonials | **Due:** TBD | **Priority:** high
-- **Owner:** Product Team | **Action:** Analyze root causes of onboarding drop-off at step 3 (38%) | **Due:** TBD | **Priority:** medium
-- **Owner:** Product Team | **Action:** Determine whether to run an A/B test first or proceed with full rollout | **Due:** TBD | **Priority:** medium
+- **Owner:** Rohan | **Action:** Finalize backend API schema | **Due:** April 22, 2026 | **Priority:** high
+- **Owner:** Miguel | **Action:** Deliver first wireframe set for mobile dashboard | **Due:** April 21, 2026 | **Priority:** high
+- **Owner:** Team | **Action:** Define evaluation metrics | **Due:** April 30, 2026 | **Priority:** high
+- **Owner:** Aisha | **Action:** Share user interview notes with team | **Due:** TBD | **Priority:** medium
+- **Owner:** Team | **Action:** Develop model prototype to answer syllabus questions | **Due:** TBD | **Priority:** high
+- **Owner:** Team | **Action:** Implement personalized recommendations in demo | **Due:** TBD | **Priority:** medium
