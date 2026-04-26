@@ -1,5 +1,6 @@
 # Shared dependencies for all tutorials (Module 1 + Module 2)
 ollama>=0.4.7
+groq>=0.11.0
 pydantic>=2.7
 langchain>=0.3.0
 langchain-ollama>=0.3.0

@@ -27,6 +27,8 @@ python -m pip install -r requirements.txt
 
 Run from repository root.
 
+### Local Ollama Workflow (baseline)
+
 ```bash
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat.py
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/02_multi_turn_chat.py
@@ -35,6 +37,32 @@ python tutorials/module-1-generative-ai-basics-prompting-and-rag/04_structured_o
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/05_embeddings.py
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/06_tiny_rag.py
 ```
+
+### Groq-Enabled Workflow (cloud chat variants)
+
+Set `.env` once:
+
+```dotenv
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+Run from repository root:
+
+```bash
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/02_multi_turn_chat_qroq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/03_streaming_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/04_structured_output_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/05_embeddings.py
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/06_tiny_rag_qroq.py --provider groq
+```
+
+Notes:
+- `05_embeddings.py` remains local Ollama embeddings.
+- `06_tiny_rag_qroq.py` uses Groq/Ollama for chat, but embeddings still run on Ollama (`qwen3-embedding:0.6b`).
+- Keep `ollama serve` running for embedding-related steps.
 
 ## Personalized TA Build
 

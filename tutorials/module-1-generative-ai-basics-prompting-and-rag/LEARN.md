@@ -48,10 +48,30 @@ By the end of this class, students should be able to:
 
 ## Files Covered
 
+### Local Ollama Baseline Tutorials
+
 - `01_chat.py`
 - `02_multi_turn_chat.py`
 - `03_streaming.py`
 - `04_structured_output.py`
 - `05_embeddings.py`
 - `06_tiny_rag.py`
+
+### Groq-Enabled Module 1 Variants
+
+- `01_chat_groq.py`
+- `02_multi_turn_chat_qroq.py`
+- `03_streaming_groq.py`
+- `04_structured_output_groq.py`
+- `06_tiny_rag_qroq.py`
+
+## Groq Workflow Notes
+
+- Groq variants use the shared provider client at `tutorials/llm_client.py`.
+- Students can switch providers per run using `--provider ollama` or `--provider groq`.
+- `.env` keys for cloud mode:
+  - `LLM_PROVIDER=groq`
+  - `GROQ_API_KEY=...`
+  - `GROQ_MODEL=llama-3.1-8b-instant`
+- Embeddings lessons remain local in this module (`05_embeddings.py` and retrieval in `06_tiny_rag_qroq.py` still rely on Ollama embeddings).
 - `Modelfile` (Personalized TA)

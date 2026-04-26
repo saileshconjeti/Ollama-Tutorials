@@ -1,6 +1,6 @@
 # Ollama Tutorials for Students (Python + Personalized TA)
 
-Practical local LLM labs for **Generative and Agentic AI** using Ollama.
+Practical LLM labs for **Generative and Agentic AI** using Ollama (local) and Groq (cloud).
 
 - Author: **Dr. Sailesh Conjeti**
 - Course: **Generative and Agentic AI**
@@ -40,7 +40,8 @@ This structure is designed to scale as new tutorial sets are added.
 ## System Requirements
 
 - Python 3.10+
-- Ollama
+- Ollama (for local mode)
+- Groq account + API key (optional, for cloud free-tier mode)
 - Terminal or PowerShell
 - Docker Desktop (recommended for Open WebUI)
 
@@ -150,6 +151,82 @@ Check installed models:
 ```bash
 ollama list
 ```
+
+## Choose LLM Provider (Local Ollama or Groq Free Tier)
+
+The new shared client at `tutorials/llm_client.py` supports both providers.
+
+### Get a Groq API Key (students)
+
+1. Go to the Groq Console and sign in.
+2. Open the API Keys page.
+3. Click `Create API Key`.
+4. Copy the key once and store it safely (you may not be able to view it again).
+
+### Mode A: Local Ollama (default)
+
+1. Keep or set these in `.env` (optional because defaults are already set):
+
+```dotenv
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=qwen3:4b
+```
+
+2. Make sure Ollama is running and the model exists:
+
+```bash
+ollama serve
+ollama pull qwen3:4b
+```
+
+3. Run the cloud-ready tutorial variant:
+
+```bash
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat_groq.py
+```
+
+### Mode B: Groq Free-Tier Cloud
+
+1. Add this to `.env`:
+
+```dotenv
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+2. Run any Groq-ready Module 1 tutorial:
+
+```bash
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/02_multi_turn_chat_qroq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/03_streaming_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/04_structured_output_groq.py --provider groq
+python tutorials/module-1-generative-ai-basics-prompting-and-rag/06_tiny_rag_qroq.py --provider groq
+```
+
+3. If you see a key error, confirm `.env` is in repo root and `GROQ_API_KEY` is valid.
+
+For `06_tiny_rag_qroq.py`, embeddings are still local via Ollama. Keep Ollama running:
+
+```bash
+ollama serve
+ollama pull qwen3-embedding:0.6b
+```
+
+Notes:
+- `GROQ_MODEL=llama-3.1-8b-instant` is the default in `tutorials/llm_client.py`.
+- You can switch providers any time by changing `LLM_PROVIDER` between `ollama` and `groq`.
+- CLI `--provider` overrides `.env` for that single run.
+
+### Important Limitation (RAG Embeddings)
+
+For RAG embeddings, do not move embeddings to Groq. Keep embeddings local with Ollama (for example `qwen3-embedding:0.6b`) or switch to a small local embedding package.
+
+Why:
+- This module’s retrieval flow and embedding lessons are built around local embedding vectors.
+- Keeping embeddings local ensures reproducible classroom behavior across all embedding and tiny-RAG tutorials.
+- In this repository, Groq is the cloud replacement for chat generation/inference, not for `qwen3-embedding:0.6b`.
 
 ## MCP + Notion Environment (Module 2 Tutorials 13-15)
 
