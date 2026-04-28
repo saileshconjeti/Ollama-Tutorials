@@ -7,6 +7,7 @@ Module: **Module 3**
 By the end of this module, students should be able to:
 
 - distinguish deterministic workflows from autonomous agent loops
+- explain provider-aware agent execution (local Ollama vs cloud Groq) using the same application control flow
 - trace a ReAct cycle using structured state: thought, action, observation
 - explain why tool execution should remain in application code
 - distinguish short-term trajectory memory from persistent user memory
@@ -112,8 +113,12 @@ Why this pattern matters:
 ## Files Covered
 
 - `16_react_agent_loop.py`
+- `16_react_agent_loop_groq.py`
 - `17_memory_agent.py`
+- `17_memory_agent_groq.py`
 - `18_planner_executor_agent.py`
+- `18_planner_executor_agent_groq.py`
 - `19_multi_agent_supervisor.py`
+- `19_multi_agent_supervisor_groq.py`
 - `agent_utils.py`
 - `data/agent_memory.json` (generated at runtime)

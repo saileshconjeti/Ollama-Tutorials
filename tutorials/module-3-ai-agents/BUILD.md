@@ -18,8 +18,25 @@ Each script is intentionally verbose in logging and comments so students can tra
 - `ollama serve` is running
 - Python virtual environment is active
 - dependencies installed from repo root: `python -m pip install -r requirements.txt`
+- for Groq variants (`*_groq.py`), `GROQ_API_KEY` is set in `.env`
 - model available:
   - `qwen2.5:0.5b` (or set `OLLAMA_CHAT_MODEL` to your preferred local model)
+
+## Create Your `.env` File (Do Not Commit)
+
+Create a `.env` file at the repository root and add:
+
+```dotenv
+OLLAMA_CHAT_MODEL=qwen2.5:0.5b
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.1-8b-instant
+# Optional:
+# LLM_PROVIDER=groq
+```
+
+Notes:
+- Keep real keys only in local `.env`; do not commit this file.
+- `.gitignore` excludes `.env` and `.env.*` so secrets are not pushed.
 
 ## Environment Setup
 
@@ -47,6 +64,17 @@ python tutorials/module-3-ai-agents/16_react_agent_loop.py
 python tutorials/module-3-ai-agents/17_memory_agent.py
 python tutorials/module-3-ai-agents/18_planner_executor_agent.py
 python tutorials/module-3-ai-agents/19_multi_agent_supervisor.py
+```
+
+## Groq Variant Execution (`*_groq.py`)
+
+Use these to run Module 3 agents with provider selection (`--provider ollama|groq`):
+
+```bash
+python tutorials/module-3-ai-agents/16_react_agent_loop_groq.py --provider groq
+python tutorials/module-3-ai-agents/17_memory_agent_groq.py --provider groq
+python tutorials/module-3-ai-agents/18_planner_executor_agent_groq.py --provider groq
+python tutorials/module-3-ai-agents/19_multi_agent_supervisor_groq.py --provider groq
 ```
 
 Recommended lecture pacing: `16 -> 17 -> 18 -> 19`.  
