@@ -239,6 +239,11 @@ NOTION_PARENT_PAGE_ID=...
 ```
 
 Notes:
+- Copy `ZAPIER_MCP_URL` from the Zapier MCP server setup screen. Zapier may
+  give you a full URL like `https://mcp.zapier.com/api/v1/connect?token=...`;
+  in that case, `ZAPIER_MCP_API_KEY` can be left empty.
+- Do not use the bare `https://mcp.zapier.com/api/v1/connect` URL without a
+  token or bearer key.
 - `NOTION_PARENT_PAGE_ID` can be either a Notion page ID or a full Notion page URL (tutorial `14` normalizes both formats).
 - Ensure the Zapier integration has access to that parent page in Notion (`Share` -> invite integration).
 

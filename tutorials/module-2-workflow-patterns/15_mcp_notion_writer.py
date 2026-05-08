@@ -51,7 +51,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
 from workflow_utils import ask_ollama_structured, pretty_json, print_header, print_subheader
 
-load_dotenv()
+load_dotenv(override=True)
 
 ZAPIER_MCP_URL = os.getenv("ZAPIER_MCP_URL", "").strip()
 ZAPIER_MCP_API_KEY = os.getenv("ZAPIER_MCP_API_KEY", "").strip()
@@ -60,6 +60,24 @@ NOTION_PARENT_PAGE_ID = os.getenv("NOTION_PARENT_PAGE_ID", "").strip()
 DEFAULT_TOPIC = "MCP for local AI assistants"
 DEFAULT_MODE = "doc"
 DEFAULT_OLLAMA_WRITER_MODEL = os.getenv("OLLAMA_CHAT_MODEL", os.getenv("OLLAMA_MODEL", "qwen3:4b"))
+LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
+
+
+def validate_zapier_mcp_config() -> None:
+    """Fail fast when the Zapier MCP setup is missing or uses a stale endpoint."""
+    if not ZAPIER_MCP_URL:
+        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
+    has_url_token = "token=" in ZAPIER_MCP_URL
+    if not ZAPIER_MCP_API_KEY and not has_url_token:
+        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env, or include ?token=... in ZAPIER_MCP_URL")
+    if not has_url_token and ZAPIER_MCP_URL.rstrip("/") == LEGACY_ZAPIER_MCP_URL:
+        raise RuntimeError(
+            "ZAPIER_MCP_URL is set to Zapier's old generic connect endpoint.\n"
+            "Open Zapier MCP, copy the Streamable HTTP server URL for your MCP server, "
+            "and use that full URL in .env.\n"
+            "The value usually looks like a Zapier MCP server-specific URL, not "
+            f"{LEGACY_ZAPIER_MCP_URL}."
+        )
 
 
 # -------------------------------------------------------------------
@@ -737,10 +755,7 @@ async def main() -> None:
     writer_model = selected_model if selected_provider == "groq" else DEFAULT_OLLAMA_WRITER_MODEL
 
     # 1) Validate required environment variables before any interactive/model work.
-    if not ZAPIER_MCP_URL:
-        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
-    if not ZAPIER_MCP_API_KEY:
-        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env")
+    validate_zapier_mcp_config()
     if not NOTION_PARENT_PAGE_ID:
         raise RuntimeError("Missing NOTION_PARENT_PAGE_ID in .env")
     normalized_parent_page_id = extract_notion_page_id(NOTION_PARENT_PAGE_ID)
@@ -772,10 +787,8 @@ async def main() -> None:
     print_subheader("Rendered Markdown To Write")
     print(markdown_text)
 
-    transport = StreamableHttpTransport(
-        ZAPIER_MCP_URL,
-        headers={"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"},
-    )
+    headers = {"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"} if ZAPIER_MCP_API_KEY else {}
+    transport = StreamableHttpTransport(ZAPIER_MCP_URL, headers=headers)
     client = Client(transport=transport)
 
     async with client:

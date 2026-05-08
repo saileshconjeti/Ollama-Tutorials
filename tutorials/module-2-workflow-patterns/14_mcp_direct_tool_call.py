@@ -37,13 +37,31 @@ from fastmcp.exceptions import ToolError
 
 from workflow_utils import print_header, print_subheader
 
-load_dotenv()
+load_dotenv(override=True)
 
 ZAPIER_MCP_URL = os.getenv("ZAPIER_MCP_URL", "").strip()
 ZAPIER_MCP_API_KEY = os.getenv("ZAPIER_MCP_API_KEY", "").strip()
 NOTION_PARENT_PAGE_ID = os.getenv("NOTION_PARENT_PAGE_ID", "").strip()
 
 DEFAULT_NEW_PAGE_TITLE = "MCP Demo Page"
+LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
+
+
+def validate_zapier_mcp_config() -> None:
+    """Fail fast when the Zapier MCP setup is missing or uses a stale endpoint."""
+    if not ZAPIER_MCP_URL:
+        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
+    has_url_token = "token=" in ZAPIER_MCP_URL
+    if not ZAPIER_MCP_API_KEY and not has_url_token:
+        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env, or include ?token=... in ZAPIER_MCP_URL")
+    if not has_url_token and ZAPIER_MCP_URL.rstrip("/") == LEGACY_ZAPIER_MCP_URL:
+        raise RuntimeError(
+            "ZAPIER_MCP_URL is set to Zapier's old generic connect endpoint.\n"
+            "Open Zapier MCP, copy the Streamable HTTP server URL for your MCP server, "
+            "and use that full URL in .env.\n"
+            "The value usually looks like a Zapier MCP server-specific URL, not "
+            f"{LEGACY_ZAPIER_MCP_URL}."
+        )
 
 
 def get_new_page_title() -> str:
@@ -275,10 +293,7 @@ def extract_notion_page_id(value: str) -> str | None:
 
 async def main() -> None:
     # 1) Validate configuration up front for cleaner classroom debugging.
-    if not ZAPIER_MCP_URL:
-        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
-    if not ZAPIER_MCP_API_KEY:
-        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env")
+    validate_zapier_mcp_config()
     if not NOTION_PARENT_PAGE_ID:
         raise RuntimeError("Missing NOTION_PARENT_PAGE_ID in .env")
 
@@ -290,10 +305,8 @@ async def main() -> None:
 
     new_page_title = get_new_page_title()
 
-    transport = StreamableHttpTransport(
-        ZAPIER_MCP_URL,
-        headers={"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"},
-    )
+    headers = {"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"} if ZAPIER_MCP_API_KEY else {}
+    transport = StreamableHttpTransport(ZAPIER_MCP_URL, headers=headers)
     client = Client(transport=transport)
 
     print_header("14 - MCP Direct Tool Call")
