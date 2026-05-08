@@ -1,5 +1,5 @@
 """
-15_mcp_groq_notion_writer.py
+15_mcp_notion_writer.py
 
 Builds on:
 - 12_tool_calling.py
@@ -7,7 +7,7 @@ Builds on:
 - 14_mcp_direct_tool_call.py
 
 New concept:
-- use Groq to generate a brief or task plan
+- use the selected LLM provider to generate a brief or task plan
 - create a fresh Notion page under a known parent page
 - add the generated content into that page through MCP
 - print the Notion web link at the end
@@ -19,13 +19,13 @@ Here, the pattern is the same, but the tool comes from an MCP server.
 Pattern:
 1. Ask for a topic
 2. Choose mode: doc or tasks
-3. Generate structured content with Groq
+3. Generate structured content with Ollama or Groq
 4. Create a new Notion page under MCP Demo Parent
 5. Add the generated markdown to that page
 6. Retrieve and print the page URL
 
 Run:
-    python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+    python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider ollama
 """
 
 from __future__ import annotations
@@ -34,7 +34,9 @@ import asyncio
 import json
 import os
 import re
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
@@ -42,6 +44,11 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 from pydantic import BaseModel, Field
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
 from workflow_utils import ask_ollama_structured, pretty_json, print_header, print_subheader
 
 load_dotenv()
@@ -52,13 +59,13 @@ NOTION_PARENT_PAGE_ID = os.getenv("NOTION_PARENT_PAGE_ID", "").strip()
 
 DEFAULT_TOPIC = "MCP for local AI assistants"
 DEFAULT_MODE = "doc"
-GROQ_WRITER_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+DEFAULT_OLLAMA_WRITER_MODEL = os.getenv("OLLAMA_CHAT_MODEL", os.getenv("OLLAMA_MODEL", "qwen3:4b"))
 
 
 # -------------------------------------------------------------------
 # Structured schemas
 # -------------------------------------------------------------------
-# These Pydantic models define the exact JSON shapes we want from Qwen.
+# These Pydantic models define the exact JSON shapes we want from the model.
 # They also make downstream markdown rendering predictable.
 
 class WriterChoice(BaseModel):
@@ -123,10 +130,10 @@ def get_runtime_inputs() -> WriterChoice:
 
 
 # -------------------------------------------------------------------
-# Groq generation
+# LLM generation
 # -------------------------------------------------------------------
 
-def generate_doc(topic: str) -> ResearchBrief:
+def generate_doc(topic: str, model: str, provider: str | None = None) -> ResearchBrief:
     """Generate a short research brief suitable for students."""
     prompt = f"""
 Create a short, student-friendly research brief for this topic.
@@ -143,12 +150,12 @@ Requirements:
     return ask_ollama_structured(
         prompt,
         ResearchBrief,
-        model=GROQ_WRITER_MODEL,
-        provider="groq",
+        model=model,
+        provider=provider,
     )
 
 
-def generate_tasks(topic: str) -> TaskPlan:
+def generate_tasks(topic: str, model: str, provider: str | None = None) -> TaskPlan:
     """Generate a short task checklist suitable for students."""
     prompt = f"""
 Create a short student task plan for this topic.
@@ -164,8 +171,8 @@ Requirements:
     return ask_ollama_structured(
         prompt,
         TaskPlan,
-        model=GROQ_WRITER_MODEL,
-        provider="groq",
+        model=model,
+        provider=provider,
     )
 
 
@@ -723,6 +730,12 @@ async def retrieve_page_url(
 # -------------------------------------------------------------------
 
 async def main() -> None:
+    parser = build_provider_parser("Generate content and write it to Notion through MCP.")
+    args = parser.parse_args()
+    provider = args.provider
+    selected_provider, selected_model = get_selected_provider_and_model(provider)
+    writer_model = selected_model if selected_provider == "groq" else DEFAULT_OLLAMA_WRITER_MODEL
+
     # 1) Validate required environment variables before any interactive/model work.
     if not ZAPIER_MCP_URL:
         raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
@@ -738,19 +751,19 @@ async def main() -> None:
 
     choice = get_runtime_inputs()
 
-    print_header("15 - Groq + MCP Notion Writer")
-    print("Pattern: generate useful content with Groq, create a fresh Notion page, and write into it")
-    print(f"Groq model: {GROQ_WRITER_MODEL}")
+    print_header("15 - MCP Notion Writer")
+    print("Pattern: generate useful content, create a fresh Notion page, and write into it")
+    print(f"Provider: {selected_provider} | Model: {writer_model}")
 
     print_subheader("Runtime Inputs")
     print(pretty_json(choice))
 
     # 2) Use LLM + schema based on selected mode.
     if choice.mode == "tasks":
-        structured_output = generate_tasks(choice.topic)
+        structured_output = generate_tasks(choice.topic, model=writer_model, provider=provider)
         markdown_text = render_task_markdown(structured_output)
     else:
-        structured_output = generate_doc(choice.topic)
+        structured_output = generate_doc(choice.topic, model=writer_model, provider=provider)
         markdown_text = render_doc_markdown(structured_output)
 
     print_subheader("Structured LLM Output")

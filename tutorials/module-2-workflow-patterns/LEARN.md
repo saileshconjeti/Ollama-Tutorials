@@ -19,38 +19,38 @@ By the end of this class, students should be able to:
 
 ## Concept Map
 
-1. Prompt Chaining (`08_prompt_chaining.py`, `08_prompt_chaining_groq.py`)
+1. Prompt Chaining (`08_prompt_chaining.py`)
 - step 1: transform raw notes into structured minutes
 - step 2: transform minutes into actionable plan
 - each step has validated schema output
-- groq variant adds `--provider ollama|groq` while preserving the same chaining structure
+- `--provider ollama|groq` switches runtime provider while preserving the same chaining structure
 
-2. Routing (`09_routing.py`, `09_routing_groq.py`)
+2. Routing (`09_routing.py`)
 - classify incoming message
 - branch to specialized handler
 - use route-specific model strategy
 - merge structured outputs into final response
-- groq variant routes all model nodes through the selected provider model
+- provider selection routes all model nodes through the selected provider model
 
-3. Orchestrator-Worker (`10_orchestrator_worker.py`, `10_orchestrator_worker_groq.py`)
+3. Orchestrator-Worker (`10_orchestrator_worker.py`)
 - orchestrator creates a structured work plan
 - workers execute narrow responsibilities in parallel graph branches
 - synthesis combines worker outputs into one final recommendation
-- groq variant keeps the same graph topology with provider-aware structured calls
+- the same graph topology works with provider-aware structured calls
 
-4. Evaluator-Reflection (`11_evaluator_reflection.py`, `11_evaluator_reflection_groq.py`)
+4. Evaluator-Reflection (`11_evaluator_reflection.py`)
 - draft is generated first
 - critique evaluates clarity, completeness, actionability, and tone
 - revision loop applies feedback with configurable min/max loop counts
 - final output is selected after quality checks
-- groq variant supports role-aware writer/critique model selection
+- supports role-aware writer/critique model selection
 
-5. Tool Calling Bridge (`12_tool_calling.py`, `12_tool_calling_groq.py`)
+5. Tool Calling Bridge (`12_tool_calling.py`)
 - model proposes a tool call from a provided schema
 - application executes the requested tool deterministically
 - model consumes tool result and produces final response
 - implementation uses `ask_ollama_structured(...)` from `workflow_utils.py`
-- groq variant preserves the same tool loop with provider CLI support
+- preserves the same tool loop with provider CLI support
 
 6. MCP Tool Discovery (`13_mcp_list_tools.py`)
 - connect to an MCP server over authenticated transport
@@ -65,7 +65,7 @@ By the end of this class, students should be able to:
   - legacy per-app tools (`notion_create_page`, `notion_retrieve_a_page`)
   - generic tools (`execute_zapier_read_action` / `execute_zapier_write_action`) with action keys
 
-8. MCP Notion Writer Variants (`15_mcp_qwen_notion_writer.py`, `15_mcp_groq_notion_writer.py`)
+8. MCP Notion Writer (`15_mcp_notion_writer.py`)
 - generate structured content (`doc` or `tasks`) with validated schema output
 - render model output into markdown for deterministic downstream writing
 - create a page and append generated markdown via MCP, then resolve page link
@@ -86,18 +86,12 @@ By the end of this class, students should be able to:
 ## Files Covered
 
 - `08_prompt_chaining.py`
-- `08_prompt_chaining_groq.py`
 - `09_routing.py`
-- `09_routing_groq.py`
 - `10_orchestrator_worker.py`
-- `10_orchestrator_worker_groq.py`
 - `11_evaluator_reflection.py`
-- `11_evaluator_reflection_groq.py`
 - `12_tool_calling.py`
-- `12_tool_calling_groq.py`
 - `13_mcp_list_tools.py`
 - `14_mcp_direct_tool_call.py`
-- `15_mcp_qwen_notion_writer.py`
-- `15_mcp_groq_notion_writer.py`
+- `15_mcp_notion_writer.py`
 - `workflow_utils.py`
 - root `requirements.txt` (shared by all modules)

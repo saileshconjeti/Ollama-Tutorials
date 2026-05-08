@@ -1,26 +1,36 @@
 # File name: 09_routing.py
-# Purpose: Student-friendly demo of customer review monitoring with LangGraph.
+# Purpose: Student-friendly demo of customer review monitoring with LangGraph and switchable provider (Ollama or Groq).
 # Concepts covered: classification, branching, explicit routes, graph state.
 # Builds on: 04_structured_output.py, 08_prompt_chaining.py
 # New concept: route one message to different LLM handlers
-# Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
-#                `pip install -r requirements.txt`
-# How to run: `python tutorials/module-2-workflow-patterns/09_routing.py`
+# Prerequisites: `pip install -r requirements.txt`; for Ollama mode, `ollama serve` and model pulled; for Groq mode, `GROQ_API_KEY` set.
+# How to run: `python tutorials/module-2-workflow-patterns/09_routing.py --provider ollama`
 # What students should observe:
 # - a classifier emits a structured RouteDecision
 # - the graph routes the review to a specialized handler
 # - each handler can use a different LLM
 # - the final answer is built from routed structured state
+# Usage examples:
+#   python tutorials/module-2-workflow-patterns/09_routing.py --provider ollama
+#   python tutorials/module-2-workflow-patterns/09_routing.py --provider groq
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
 
 from __future__ import annotations
 
+import sys
 from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel
 
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
 from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
 
 
@@ -56,14 +66,28 @@ class HandlerOutput(BaseModel):
 class WorkflowState(TypedDict, total=False):
     # LangGraph shared state keys passed between nodes.
     user_message: str
+    provider: str | None
+    active_model: str
     route_decision: dict
     handler_output: dict
     final_answer: str
 
 
+def resolve_node_model(state: WorkflowState, default_model: str) -> str:
+    """
+    Resolve which model a node should use.
+    In Groq mode, use the run-selected model from CLI.
+    In Ollama mode, keep route-specific model defaults.
+    """
+    if state.get("provider") == "groq":
+        return state.get("active_model", default_model)
+    return default_model
+
+
 def classify_node(state: WorkflowState) -> WorkflowState:
     """Classify a customer review into one of three support routes."""
     # First step in graph: produce a strict route label.
+    model_for_node = resolve_node_model(state, TRIAGE_MODEL)
     decision = ask_ollama_structured(
         user_prompt=f"""
         Classify the message into one of:
@@ -75,13 +99,15 @@ def classify_node(state: WorkflowState) -> WorkflowState:
         {state["user_message"]}
         """,
         schema_model=RouteDecision,
-        model=TRIAGE_MODEL,
+        model=model_for_node,
+        provider=state.get("provider"),
     )
     return {"route_decision": decision.model_dump()}
 
 
 def bug_handler_node(state: WorkflowState) -> WorkflowState:
     """Handle bug reports with the bug-focused model."""
+    model_for_node = resolve_node_model(state, BUG_MODEL)
     output = ask_ollama_structured(
         user_prompt=f"""
         You are the bug triage assistant for customer reviews.
@@ -94,15 +120,17 @@ def bug_handler_node(state: WorkflowState) -> WorkflowState:
         {state["route_decision"]}
         """,
         schema_model=HandlerOutput,
-        model=BUG_MODEL,
+        model=model_for_node,
+        provider=state.get("provider"),
     )
     payload = output.model_dump()
-    payload["model_used"] = BUG_MODEL
+    payload["model_used"] = model_for_node
     return {"handler_output": payload}
 
 
 def feature_handler_node(state: WorkflowState) -> WorkflowState:
     """Handle feature requests with the feature-focused model."""
+    model_for_node = resolve_node_model(state, FEATURE_MODEL)
     output = ask_ollama_structured(
         user_prompt=f"""
         You are the product feedback assistant for feature requests.
@@ -115,15 +143,17 @@ def feature_handler_node(state: WorkflowState) -> WorkflowState:
         {state["route_decision"]}
         """,
         schema_model=HandlerOutput,
-        model=FEATURE_MODEL,
+        model=model_for_node,
+        provider=state.get("provider"),
     )
     payload = output.model_dump()
-    payload["model_used"] = FEATURE_MODEL
+    payload["model_used"] = model_for_node
     return {"handler_output": payload}
 
 
 def praise_handler_node(state: WorkflowState) -> WorkflowState:
     """Handle praise/general feedback with the feedback-focused model."""
+    model_for_node = resolve_node_model(state, PRAISE_MODEL)
     output = ask_ollama_structured(
         user_prompt=f"""
         You are the customer experience assistant for praise and general feedback.
@@ -136,10 +166,11 @@ def praise_handler_node(state: WorkflowState) -> WorkflowState:
         {state["route_decision"]}
         """,
         schema_model=HandlerOutput,
-        model=PRAISE_MODEL,
+        model=model_for_node,
+        provider=state.get("provider"),
     )
     payload = output.model_dump()
-    payload["model_used"] = PRAISE_MODEL
+    payload["model_used"] = model_for_node
     return {"handler_output": payload}
 
 
@@ -213,14 +244,26 @@ def prompt_for_review(default_review: str = DEFAULT_REVIEW) -> str:
 
 
 if __name__ == "__main__":
+    parser = build_provider_parser("Run a customer-review routing workflow with Ollama or Groq.")
+    args = parser.parse_args()
+    provider = args.provider
+    selected_provider, selected_model = get_selected_provider_and_model(provider)
+
     print_header("09 - CUSTOMER REVIEW ROUTING")
     print("Builds on: 04_structured_output.py, 08_prompt_chaining.py")
     print("New concept: route one review to different LLM handlers")
+    print(f"Provider: {selected_provider} | Model: {selected_model}")
 
     app = build_graph()
     user_review = prompt_for_review()
     # Single invoke call executes classify -> chosen handler -> final.
-    result = app.invoke({"user_message": user_review})
+    result = app.invoke(
+        {
+            "user_message": user_review,
+            "provider": selected_provider,
+            "active_model": selected_model,
+        }
+    )
 
     print_subheader("ROUTE DECISION")
     print(pretty_json(result["route_decision"]))

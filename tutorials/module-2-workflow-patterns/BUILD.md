@@ -7,7 +7,7 @@ Module: **Module 2**
 - `ollama serve` is running
 - Python virtual environment is active
 - dependencies installed from repo root: `python -m pip install -r requirements.txt`
-- for Groq variants (`*_groq.py`), `GROQ_API_KEY` is set in `.env`
+- for Groq runs, `GROQ_API_KEY` is set in `.env`
 - models available:
   - `qwen3:0.6b`
   - `qwen2.5:0.5b`
@@ -28,7 +28,7 @@ NOTION_PARENT_PAGE_ID=your_notion_parent_page_id_or_url
 OLLAMA_CHAT_MODEL=qwen3:4b
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=llama-3.1-8b-instant
-# Optional (11_evaluator_reflection_groq.py only):
+# Optional (11_evaluator_reflection.py with --provider groq only):
 # ER_GROQ_CRITIQUE_MODEL=llama-3.3-70b-versatile
 ```
 
@@ -66,21 +66,20 @@ python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
 python tutorials/module-2-workflow-patterns/12_tool_calling.py
 python tutorials/module-2-workflow-patterns/13_mcp_list_tools.py
 python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
-python tutorials/module-2-workflow-patterns/15_mcp_qwen_notion_writer.py
-python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py
 ```
 
-## Groq Variant Execution (`*_groq.py`)
+## Provider Selection
 
-Use these to run Module 2 workflows with provider selection (`--provider ollama|groq`):
+Scripts `08-12` and `15` support provider selection directly:
 
 ```bash
-python tutorials/module-2-workflow-patterns/08_prompt_chaining_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/09_routing_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/10_orchestrator_worker_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/11_evaluator_reflection_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/12_tool_calling_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider groq
+python tutorials/module-2-workflow-patterns/09_routing.py --provider groq
+python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py --provider groq
+python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py --provider groq
+python tutorials/module-2-workflow-patterns/12_tool_calling.py --provider groq
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider groq
 ```
 
 ## Prompt Chaining CLI Arguments (`08_prompt_chaining.py`)
@@ -95,11 +94,11 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
 ```
 
-Groq variant examples:
+Groq examples:
 
 ```bash
-python tutorials/module-2-workflow-patterns/08_prompt_chaining_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/08_prompt_chaining_groq.py --provider groq --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider groq
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider groq --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
 ```
 
 ## Suggested Routing Demo Inputs (`09_routing.py`)
@@ -108,33 +107,33 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining_groq.py --provide
 - Feature request: "Please add bulk invoice export."
 - Praise/general feedback: "Onboarding was smooth and support was excellent."
 
-Groq variant run:
+Groq run:
 
 ```bash
-python tutorials/module-2-workflow-patterns/09_routing_groq.py --provider groq
+python tutorials/module-2-workflow-patterns/09_routing.py --provider groq
 ```
 
 ## Orchestrator-Worker Demo Controls (`10_orchestrator_worker.py`)
 
 - input is interactive (press Enter to use default topic)
 - optional env vars:
-  - `OW_FAST_MODE=1` (default) for faster runs
   - `OW_USE_LLM_ORCHESTRATOR=0` (default) for deterministic plan
+  - `OW_MAX_RETRIES=2` (default) for structured-output repair attempts
   - `OW_ORCHESTRATOR_MODEL`, `OW_WORKER_MODEL`, `OW_SYNTHESIS_MODEL`
 
 Example:
 
 ```bash
-OW_FAST_MODE=1 OW_WORKER_MODEL=qwen3:0.6b python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
+OW_WORKER_MODEL=qwen3:0.6b python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py
 ```
 
-Groq variant run:
+Groq run:
 
 ```bash
-python tutorials/module-2-workflow-patterns/10_orchestrator_worker_groq.py --provider groq
+python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py --provider groq
 ```
 
-### Suggested Prompt Inputs (`10_orchestrator_worker.py` and `10_orchestrator_worker_groq.py`)
+### Suggested Prompt Inputs (`10_orchestrator_worker.py`)
 
 - `Create a 2-week exam prep plan for a student taking Data Structures and DBMS while working a part-time job 15 hours/week. Student is weak in recursion and SQL joins, has classes Mon-Fri 9am-2pm, and can study 2 hours on weekdays and 5 hours on weekends.`
 - `Design a 14-day recovery plan for a student who has only 2 weeks left before finals in Operating Systems and Computer Networks. Constraints: student gets tired after 10pm, has anxiety before tests, and loses focus after 45 minutes. Include realistic breaks and fallback options for low-energy days.`
@@ -150,7 +149,7 @@ python tutorials/module-2-workflow-patterns/10_orchestrator_worker_groq.py --pro
   - `ER_MODEL` (writer/draft-revise model)
   - `ER_CRITIQUE_MODEL` (critique model)
   - `ER_MIN_REVISIONS` and `ER_MAX_REVISIONS` (loop behavior)
-  - `ER_FAST_MODE` (`0` default for more reliable structured retries)
+  - `ER_MAX_RETRIES=2` (default) for structured-output repair attempts
 
 Example:
 
@@ -158,19 +157,19 @@ Example:
 ER_MIN_REVISIONS=2 ER_MAX_REVISIONS=5 ER_MODEL=qwen3:0.6b ER_CRITIQUE_MODEL=qwen2.5:0.5b python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
 ```
 
-Groq variant run:
+Groq run:
 
 ```bash
-python tutorials/module-2-workflow-patterns/11_evaluator_reflection_groq.py --provider groq
+python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py --provider groq
 ```
 
 Optional Groq critique override:
 
 ```bash
-ER_GROQ_CRITIQUE_MODEL=llama-3.3-70b-versatile python tutorials/module-2-workflow-patterns/11_evaluator_reflection_groq.py --provider groq
+ER_GROQ_CRITIQUE_MODEL=llama-3.3-70b-versatile python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py --provider groq
 ```
 
-### Suggested Prompt Inputs (`11_evaluator_reflection.py` and `11_evaluator_reflection_groq.py`)
+### Suggested Prompt Inputs (`11_evaluator_reflection.py`)
 
 - `Write a short executive update on our Generative AI class project, covering progress, blockers, and next actions for this week.`
 - `Draft an executive update for leadership on pilot deployment outcomes, including measurable impact, key risks, and decisions needed by Friday.`
@@ -192,13 +191,13 @@ Example:
 python tutorials/module-2-workflow-patterns/12_tool_calling.py
 ```
 
-Groq variant run:
+Groq run:
 
 ```bash
-python tutorials/module-2-workflow-patterns/12_tool_calling_groq.py --provider groq
+python tutorials/module-2-workflow-patterns/12_tool_calling.py --provider groq
 ```
 
-### Suggested Prompt Inputs (`12_tool_calling.py` and `12_tool_calling_groq.py`)
+### Suggested Prompt Inputs (`12_tool_calling.py`)
 
 - `Read the local course note and tell me the two most important reminders.`
 - `Multiply 17.5 by 8 and explain the result in one sentence.`
@@ -244,7 +243,7 @@ Example:
 python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
 ```
 
-## MCP Notion Writer Variants (`15_mcp_qwen_notion_writer.py`, `15_mcp_groq_notion_writer.py`)
+## MCP Notion Writer (`15_mcp_notion_writer.py`)
 
 - prompts for topic/mode/page title
 - generates structured content (`doc` or `tasks`) and renders markdown
@@ -255,8 +254,8 @@ python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
 Example:
 
 ```bash
-python tutorials/module-2-workflow-patterns/15_mcp_qwen_notion_writer.py
-python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider ollama
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider groq
 ```
 
 ## Troubleshooting (MCP + Notion)
@@ -277,7 +276,7 @@ Cause:
 - Zapier sometimes asks a clarification question (content/icon/cover) instead of executing immediately.
 
 Fix:
-1. Use the updated writer scripts; they auto-retry create with explicit defaults.
+1. Use the updated Notion writer; it auto-retries create with explicit defaults.
 2. If testing manually, re-run create with clear instructions to proceed with title + parent only.
 
 ### `The page appears to have been created, but no page ID was extracted from the result`
@@ -298,7 +297,7 @@ Cause:
 Fix:
 1. In Notion, open the parent page.
 2. Click `Share` and invite the Zapier integration/account used in MCP.
-3. Re-run preflight (`14_mcp_direct_tool_call.py` or `15_mcp_*_notion_writer.py`).
+3. Re-run preflight (`14_mcp_direct_tool_call.py` or `15_mcp_notion_writer.py`).
 
 ## Classroom Demo Prompts With Context
 
@@ -434,7 +433,7 @@ Sample page title B:
 Capstone Planning - Action Items
 ```
 
-## `15_mcp_qwen_notion_writer.py` / `15_mcp_groq_notion_writer.py` (topic, mode, title)
+## `15_mcp_notion_writer.py` (topic, mode, title)
 
 Context: LLM generates structured content, then MCP writes it to Notion.
 

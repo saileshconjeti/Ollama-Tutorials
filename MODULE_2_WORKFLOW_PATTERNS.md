@@ -33,8 +33,7 @@ source .venv/bin/activate
 - `12_tool_calling.py`: Tool-calling bridge from workflow patterns to agent loops
 - `13_mcp_list_tools.py`: Connect to MCP and discover available Zapier tools
 - `14_mcp_direct_tool_call.py`: Direct MCP tool invocation to create/retrieve a Notion page with runtime tool-mode compatibility
-- `15_mcp_qwen_notion_writer.py`: Qwen-based MCP Notion writer variant
-- `15_mcp_groq_notion_writer.py`: Groq-based MCP Notion writer variant (recommended for cloud workflow demos)
+- `15_mcp_notion_writer.py`: Provider-aware MCP Notion writer for Ollama or Groq
 - `workflow_utils.py`: Shared helper utilities (`ask_ollama_structured`, printing, JSON fallback parse)
 
 ## Run Order
@@ -49,8 +48,7 @@ python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py
 python tutorials/module-2-workflow-patterns/12_tool_calling.py
 python tutorials/module-2-workflow-patterns/13_mcp_list_tools.py
 python tutorials/module-2-workflow-patterns/14_mcp_direct_tool_call.py
-python tutorials/module-2-workflow-patterns/15_mcp_qwen_notion_writer.py
-python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py
 ```
 
 For tutorials `13-15`, set these `.env` variables:

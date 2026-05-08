@@ -1,26 +1,33 @@
 # File name: 08_prompt_chaining.py
-# Purpose: Demonstrate prompt chaining for meeting-minutes summarization.
+# Purpose: Demonstrate prompt chaining for meeting-minutes summarization with switchable provider (Ollama or Groq).
 # Concepts covered: multi-step workflows, structured intermediate state, schema validation.
 # Builds on: 01_chat.py, 04_structured_output.py
 # New concept: prompt chaining with validated intermediate JSON
-# Prerequisites: `ollama serve` running, model `qwen3:4b` pulled,
-#                `pip install -r requirements.txt`
-# How to run: `python tutorials/module-2-workflow-patterns/08_prompt_chaining.py`
+# Prerequisites: `pip install -r requirements.txt`; for Ollama mode, `ollama serve` and model pulled; for Groq mode, `GROQ_API_KEY` set.
+# How to run: `python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider ollama`
 # What students should observe:
 # - Step 1 converts raw notes into meaningful meeting minutes
 # - Step 2 turns those minutes into a practical action plan
 # - Input is from a text file (uploaded notes)
+# Usage examples:
+#   python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider ollama
+#   python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider groq
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
 
 from __future__ import annotations
 
-import argparse
+import sys
 from pathlib import Path
 from typing import List
 
 from pydantic import BaseModel, Field
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
 from workflow_utils import ask_ollama_structured, print_header, print_subheader
 
 
@@ -71,7 +78,7 @@ def build_minutes_input(cli_file: str | None = None) -> str:
     return read_minutes_file(path_to_use)
 
 
-def step_1_make_meaningful_minutes(raw_minutes: str) -> MeaningfulMinutes:
+def step_1_make_meaningful_minutes(raw_minutes: str, provider: str | None = None) -> MeaningfulMinutes:
     """Step 1: Convert raw notes into polished, meaningful meeting minutes."""
     return ask_ollama_structured(
         user_prompt=f"""
@@ -82,10 +89,11 @@ def step_1_make_meaningful_minutes(raw_minutes: str) -> MeaningfulMinutes:
         {raw_minutes}
         """,
         schema_model=MeaningfulMinutes,
+        provider=provider,
     )
 
 
-def step_2_create_action_plan(minutes: MeaningfulMinutes) -> MeetingActionPlan:
+def step_2_create_action_plan(minutes: MeaningfulMinutes, provider: str | None = None) -> MeetingActionPlan:
     """Step 2: Create a clear action plan from structured minutes."""
     # Prompt chaining core idea:
     # pass validated JSON from step 1 into step 2.
@@ -98,6 +106,7 @@ def step_2_create_action_plan(minutes: MeaningfulMinutes) -> MeetingActionPlan:
         {minutes.model_dump_json(indent=2)}
         """,
         schema_model=MeetingActionPlan,
+        provider=provider,
     )
 
 
@@ -151,7 +160,7 @@ def write_markdown_output(markdown_text: str, output_path: str) -> Path:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
+    parser = build_provider_parser(
         description="Prompt chaining demo: meeting minutes summarizer + action planner."
     )
     parser.add_argument(
@@ -167,18 +176,21 @@ if __name__ == "__main__":
         help="Path to the output markdown file.",
     )
     args = parser.parse_args()
+    provider = args.provider
+    selected_provider, selected_model = get_selected_provider_and_model(provider)
 
     print_header("08 - PROMPT CHAINING")
     print("Builds on: 01_chat.py, 04_structured_output.py")
     print("Scenario: Meeting minutes summarizer + action planner")
     print("Input mode: text file only")
     print("Output mode: markdown file")
+    print(f"Provider: {selected_provider} | Model: {selected_model}")
 
     raw_minutes = build_minutes_input(cli_file=args.file)
 
     # Chain step 1 -> step 2 with typed intermediate state.
-    meaningful_minutes = step_1_make_meaningful_minutes(raw_minutes)
-    action_plan = step_2_create_action_plan(meaningful_minutes)
+    meaningful_minutes = step_1_make_meaningful_minutes(raw_minutes, provider=provider)
+    action_plan = step_2_create_action_plan(meaningful_minutes, provider=provider)
 
     # Final step: persist the chain output for review/sharing.
     markdown_report = build_markdown_output(meaningful_minutes, action_plan)

@@ -3,7 +3,7 @@
 
 Builds on:
 - 07_tool_calling.py
-- 10_routing.py
+- 09_routing.py
 
 New concept:
 - tool use inside a larger workflow
@@ -20,17 +20,23 @@ Pattern:
 4. Produce the final answer
 
 Run:
-    python 12_tool_calling.py
+    python tutorials/module-2-workflow-patterns/12_tool_calling.py --provider ollama
 """
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
 from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
 
 
@@ -51,7 +57,7 @@ if not SAMPLE_FILE.exists():
 
 
 DEFAULT_QUERY = "Read the local course note and tell me the two most important reminders."
-DEFAULT_MODEL = "qwen3:4b"
+DEFAULT_OLLAMA_MODEL = "qwen3:4b"
 
 
 # -------------------------------------------------------------------
@@ -161,12 +167,15 @@ def get_user_query() -> str:
     return query
 
 
-def get_active_model() -> str:
-    """Resolve the model used for this run."""
-    return DEFAULT_MODEL
+def get_active_model(provider: str | None = None) -> str:
+    """Resolve the runtime model label for the selected provider."""
+    selected_provider, selected_model = get_selected_provider_and_model(provider)
+    if selected_provider == "groq":
+        return selected_model
+    return DEFAULT_OLLAMA_MODEL
 
 
-def decide_tool(query: str, model: str) -> ToolDecision:
+def decide_tool(query: str, model: str, provider: str | None = None) -> ToolDecision:
     """Ask the model whether a tool is needed."""
     # Keep the decision schema tight so routing stays deterministic in app code.
     prompt = f"""
@@ -190,7 +199,7 @@ Rules:
 User request:
 {query}
 """
-    decision = ask_ollama_structured(prompt, ToolDecision, model=model)
+    decision = ask_ollama_structured(prompt, ToolDecision, model=model, provider=provider)
     return normalize_decision(decision)
 
 
@@ -203,7 +212,12 @@ def normalize_decision(decision: ToolDecision) -> ToolDecision:
     return decision
 
 
-def build_tool_invocation(query: str, decision: ToolDecision, model: str) -> ToolInvocation:
+def build_tool_invocation(
+    query: str,
+    decision: ToolDecision,
+    model: str,
+    provider: str | None = None,
+) -> ToolInvocation:
     """Ask the model to construct the tool call."""
     # We constrain arguments per tool so execution can remain safe and predictable.
     prompt = f"""
@@ -228,7 +242,7 @@ Rules:
 - For keyword_check, provide arguments: text, keyword
 - For study_time_estimate, provide arguments: topics, minutes_per_topic
 """
-    invocation = ask_ollama_structured(prompt, ToolInvocation, model=model)
+    invocation = ask_ollama_structured(prompt, ToolInvocation, model=model, provider=provider)
     if invocation.tool_name != decision.tool_name:
         print_subheader("Invocation Warning")
         print(
@@ -281,7 +295,12 @@ def execute_tool(invocation: ToolInvocation) -> ToolResult:
     return ToolResult(tool_name=tool_name, output=output)
 
 
-def create_final_answer(query: str, tool_result: ToolResult, model: str) -> FinalAnswer:
+def create_final_answer(
+    query: str,
+    tool_result: ToolResult,
+    model: str,
+    provider: str | None = None,
+) -> FinalAnswer:
     """Ask the model to produce the final user-facing answer."""
     prompt = f"""
 Answer the user's request clearly.
@@ -292,7 +311,7 @@ User request:
 Tool result:
 {tool_result.model_dump_json(indent=2)}
 """
-    return ask_ollama_structured(prompt, FinalAnswer, model=model)
+    return ask_ollama_structured(prompt, FinalAnswer, model=model, provider=provider)
 
 
 # -------------------------------------------------------------------
@@ -300,18 +319,23 @@ Tool result:
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
+    parser = build_provider_parser("Run tool-calling workflow with Ollama or Groq.")
+    args = parser.parse_args()
+    provider = args.provider
+    selected_provider, selected_model = get_selected_provider_and_model(provider)
+
     print_header("12 - Tool Calling")
     print("Pattern: let the model decide when to use a tool")
     print("Why it matters: combine language with reliable local actions")
-    active_model = get_active_model()
-    print(f"Model in use: {active_model}")
+    active_model = get_active_model(provider)
+    print(f"Provider: {selected_provider} | Model in use: {selected_model}")
 
     user_query = get_user_query()
 
     print_subheader("User Query")
     print(user_query)
 
-    decision = decide_tool(user_query, active_model)
+    decision = decide_tool(user_query, active_model, provider=provider)
     print_subheader("Tool Decision")
     print(pretty_json(decision))
 
@@ -320,7 +344,7 @@ if __name__ == "__main__":
         print_subheader("Final")
         print("No tool was needed.")
     else:
-        invocation = build_tool_invocation(user_query, decision, active_model)
+        invocation = build_tool_invocation(user_query, decision, active_model, provider=provider)
         print_subheader("Tool Invocation")
         print(pretty_json(invocation))
 
@@ -328,6 +352,6 @@ if __name__ == "__main__":
         print_subheader("Structured Tool Result")
         print(pretty_json(tool_result))
 
-        final_answer = create_final_answer(user_query, tool_result, active_model)
+        final_answer = create_final_answer(user_query, tool_result, active_model, provider=provider)
         print_subheader("Final Answer")
         print(pretty_json(final_answer))
