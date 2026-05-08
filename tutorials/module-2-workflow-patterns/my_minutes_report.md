@@ -1,32 +1,34 @@
 # Meaningful Meeting Minutes
 
 ## Meeting Details
-- **Meeting Title:** Meeting Title
-- **Purpose:** To review and discuss the AI study assistant focus for first-year students in Computer Science.
+- **Meeting Title:** Computer Science Capstone Team Check-in
+- **Purpose:** Capstone project focus discussion and progress review
 
 ## Key Decisions
-- Team agreed on an AI study assistant focusing on initial questions from first-year students.
-- Aisha shared updated user interview notes from 12 student participants.
+- The capstone focus will be an AI study assistant for first-year students.
 - Rohan will finalize the backend API schema by April 22, 2026.
 - Miguel will deliver the first wireframe set for the mobile dashboard by April 21, 2026.
-- Fatima reported that the model prototype now answers syllabus questions with about 81% accuracy.
+- The model prototype now answers syllabus questions with about 81% accuracy.
 
 ## Important Updates
-- Rohan clarified that personalization in the demo should be included if necessary
-- Miguel mentioned a testing data incomplete issue for two core courses
+- Aisha shared updated user interview notes from 12 student participants.
+- Faculty mentor asked the team to define evaluation metrics before the April 30, 2026 progress review.
 
 ## Open Questions
-- Should first demos include personalized recommendations or just Q&A?
-- Is there any risk of testing data being incomplete?
+- Should the first demo include personalized recommendations or only Q&A?
 
 # Action Plan
 
 ## Overall Goal
-To review and discuss the AI study assistant focus for first-year students in Computer Science.
+AI study assistant for first-year students
 
 ## Immediate Next Step
-Develop a practical action plan from the meeting minutes.
+Define evaluation metrics and finalize backend API schema
 
 ## Action Items
-- **Owner:** Rohan | **Action:** Finalize the backend API schema by April 22, 2026. | **Due:** April 22, 2026 | **Priority:** high
-- **Owner:** Fatima | **Action:** Report that the model prototype now answers syllabus questions with about 81% accuracy. | **Due:** April 21, 2026 | **Priority:** medium
+- **Owner:** Rohan | **Action:** Finalize backend API schema | **Due:** April 22, 2026 | **Priority:** high
+- **Owner:** Miguel | **Action:** Deliver first wireframe set for mobile dashboard | **Due:** April 21, 2026 | **Priority:** high
+- **Owner:** Team | **Action:** Define evaluation metrics | **Due:** April 30, 2026 | **Priority:** high
+- **Owner:** Aisha | **Action:** Share user interview notes with team | **Due:** TBD | **Priority:** medium
+- **Owner:** Team | **Action:** Develop model prototype to answer syllabus questions | **Due:** TBD | **Priority:** high
+- **Owner:** Team | **Action:** Implement personalized recommendations in demo | **Due:** TBD | **Priority:** medium
