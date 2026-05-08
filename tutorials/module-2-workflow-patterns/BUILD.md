@@ -22,8 +22,8 @@ Module: **Module 2**
 Create a `.env` file at the repository root and add:
 
 ```dotenv
-ZAPIER_MCP_URL=https://mcp.zapier.com/api/v1/connect
-ZAPIER_MCP_API_KEY=your_zapier_mcp_api_key
+ZAPIER_MCP_URL=your_zapier_mcp_streamable_http_server_url
+ZAPIER_MCP_API_KEY=your_zapier_mcp_secret_or_bearer_token_optional_if_url_has_token
 NOTION_PARENT_PAGE_ID=your_notion_parent_page_id_or_url
 OLLAMA_CHAT_MODEL=qwen3:4b
 GROQ_API_KEY=your_groq_api_key
@@ -35,6 +35,11 @@ GROQ_MODEL=llama-3.1-8b-instant
 Notes:
 - Keep real keys only in local `.env`; do not commit this file.
 - `.gitignore` excludes `.env` and `.env.*` so secrets are not pushed.
+- Copy `ZAPIER_MCP_URL` from the Zapier MCP server setup screen. Zapier may
+  give you a full URL like `https://mcp.zapier.com/api/v1/connect?token=...`;
+  in that case, `ZAPIER_MCP_API_KEY` can be left empty.
+- Do not use the bare `https://mcp.zapier.com/api/v1/connect` URL without a
+  token or bearer key; it can terminate the MCP session during initialization.
 - `NOTION_PARENT_PAGE_ID` can be either a Notion page ID or full page URL.
 
 ## Environment Setup

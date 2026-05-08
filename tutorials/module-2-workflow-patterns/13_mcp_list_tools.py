@@ -20,10 +20,12 @@ from dotenv import load_dotenv
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
-load_dotenv()
+load_dotenv(override=True)
 
 ZAPIER_MCP_URL = os.getenv("ZAPIER_MCP_URL", "").strip()
 ZAPIER_MCP_API_KEY = os.getenv("ZAPIER_MCP_API_KEY", "").strip()
+
+LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
 
 
 def print_header(title: str) -> None:
@@ -32,17 +34,32 @@ def print_header(title: str) -> None:
     print("=" * 80)
 
 
-async def main():
-    # Fail fast with clear setup errors so students know what to fix in .env.
+def validate_zapier_mcp_config() -> None:
+    """Fail fast when the Zapier MCP setup is missing or uses a stale endpoint."""
     if not ZAPIER_MCP_URL:
         raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
-    if not ZAPIER_MCP_API_KEY:
-        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env")
+    has_url_token = "token=" in ZAPIER_MCP_URL
+    if not ZAPIER_MCP_API_KEY and not has_url_token:
+        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env, or include ?token=... in ZAPIER_MCP_URL")
+    if not has_url_token and ZAPIER_MCP_URL.rstrip("/") == LEGACY_ZAPIER_MCP_URL:
+        raise RuntimeError(
+            "ZAPIER_MCP_URL is set to Zapier's old generic connect endpoint.\n"
+            "Open Zapier MCP, copy the Streamable HTTP server URL for your MCP server, "
+            "and use that full URL in .env.\n"
+            "The value usually looks like a Zapier MCP server-specific URL, not "
+            f"{LEGACY_ZAPIER_MCP_URL}."
+        )
+
+
+async def main():
+    # Fail fast with clear setup errors so students know what to fix in .env.
+    validate_zapier_mcp_config()
 
     # Transport = "how" we connect to MCP. Here: streamable HTTP + bearer auth.
+    headers = {"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"} if ZAPIER_MCP_API_KEY else {}
     transport = StreamableHttpTransport(
         ZAPIER_MCP_URL,
-        headers={"Authorization": f"Bearer {ZAPIER_MCP_API_KEY}"},
+        headers=headers,
     )
 
     # Client = high-level MCP interface (list tools, call tools, etc.).
