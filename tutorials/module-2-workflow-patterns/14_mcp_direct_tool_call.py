@@ -531,6 +531,37 @@ async def main() -> None:
         page_id = find_first_value(parsed_create, ("page_id", "pageId", "id"))
         page_url = find_first_value(parsed_create, ("page_url", "url", "public_url"))
 
+        # Some generic Zapier actions return a clarification prompt instead of
+        # executing when optional fields are omitted. Retry with explicit
+        # defaults so the classroom demo stays non-interactive.
+        follow_up = find_first_value(parsed_create, ("followUpQuestion",))
+        if not use_legacy_tools and not page_id and follow_up:
+            print_subheader("Auto-Resolve Follow-Up")
+            print("Zapier requested optional page details. Retrying create with explicit defaults.")
+
+            retry_args = {
+                **create_args,
+                "instructions": (
+                    "Create the page now using only the provided required parameters. "
+                    "Do not ask follow-up questions. "
+                    "Use no icon, no cover, and no initial body content."
+                ),
+            }
+
+            print_subheader("VISIBLE TOOL CALL - Create Page (Retry)")
+            print(f"Tool: {create_tool_name}")
+            print("Arguments:")
+            print(json.dumps(retry_args, indent=2))
+
+            retry_result = await client.call_tool(create_tool_name, retry_args)
+
+            print_subheader("VISIBLE TOOL RESULT - Create Page (Retry)")
+            print(format_result_content(retry_result))
+
+            parsed_create = try_parse_result_json(retry_result)
+            page_id = find_first_value(parsed_create, ("page_id", "pageId", "id"))
+            page_url = find_first_value(parsed_create, ("page_url", "url", "public_url"))
+
         # 4) If create result has no URL, retrieve the page by ID as a second step.
         if not page_url and page_id:
             if "params" in retrieve_args:
