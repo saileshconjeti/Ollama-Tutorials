@@ -24,6 +24,14 @@ Pattern:
 5. Add the generated markdown to that page
 6. Retrieve and print the page URL
 
+Teaching note:
+Zapier MCP can expose Notion in two shapes:
+- older direct tools such as notion_create_page
+- newer generic tools such as execute_zapier_write_action
+
+This file handles both shapes so students can focus on the workflow:
+LLM output -> MCP tool call -> external app result.
+
 Run:
     python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider ollama
 """
@@ -64,7 +72,7 @@ LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
 
 
 def validate_zapier_mcp_config() -> None:
-    """Fail fast when the Zapier MCP setup is missing or uses a stale endpoint."""
+    """Check the MCP connection settings before students get deep into the demo."""
     if not ZAPIER_MCP_URL:
         raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
     has_url_token = "token=" in ZAPIER_MCP_URL
@@ -83,8 +91,8 @@ def validate_zapier_mcp_config() -> None:
 # -------------------------------------------------------------------
 # Structured schemas
 # -------------------------------------------------------------------
-# These Pydantic models define the exact JSON shapes we want from the model.
-# They also make downstream markdown rendering predictable.
+# Pydantic models act like a contract with the LLM.
+# Instead of asking for "some text", we ask for fields we can trust later.
 
 class WriterChoice(BaseModel):
     topic: str
@@ -111,14 +119,14 @@ class TaskPlan(BaseModel):
 # -------------------------------------------------------------------
 
 def build_default_page_title(topic: str, mode: str) -> str:
-    """Build a page title that is unique enough for classroom demos."""
+    """Build a readable page title that will not collide during repeated demos."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H-%M")
     suffix = "Brief" if mode == "doc" else "Tasks"
     return f"{topic} - {suffix} - {timestamp}"
 
 
 def get_runtime_inputs() -> WriterChoice:
-    """Collect topic, mode, and output page title from the terminal."""
+    """Collect the few choices that should change from one run to the next."""
     print_subheader("Enter topic")
     print("Press Enter to use the default example.")
     print(f"Default topic: {DEFAULT_TOPIC}\n")
@@ -143,7 +151,7 @@ def get_runtime_inputs() -> WriterChoice:
     if not page_title:
         page_title = default_page_title
 
-    # Keep runtime input structured too, so printing/logging is consistent.
+    # Use the same structured-data habit for human input that we use for model output.
     return WriterChoice(topic=topic, mode=mode, page_title=page_title)
 
 
@@ -152,7 +160,7 @@ def get_runtime_inputs() -> WriterChoice:
 # -------------------------------------------------------------------
 
 def generate_doc(topic: str, model: str, provider: str | None = None) -> ResearchBrief:
-    """Generate a short research brief suitable for students."""
+    """Ask the selected model for a research brief that matches ResearchBrief."""
     prompt = f"""
 Create a short, student-friendly research brief for this topic.
 
@@ -164,7 +172,7 @@ Requirements:
 - Make it suitable for classroom use
 - Avoid long dense paragraphs
 """
-    # ask_ollama_structured enforces schema + validation + retry.
+    # ask_ollama_structured handles provider calls, schema validation, and retries.
     return ask_ollama_structured(
         prompt,
         ResearchBrief,
@@ -174,7 +182,7 @@ Requirements:
 
 
 def generate_tasks(topic: str, model: str, provider: str | None = None) -> TaskPlan:
-    """Generate a short task checklist suitable for students."""
+    """Ask the selected model for a checklist that matches TaskPlan."""
     prompt = f"""
 Create a short student task plan for this topic.
 
@@ -195,8 +203,8 @@ Requirements:
 
 
 def render_doc_markdown(brief: ResearchBrief) -> str:
-    """Convert a research brief into markdown."""
-    # Build markdown explicitly so students can see model-output -> document mapping.
+    """Turn validated model data into the markdown we will send to Notion."""
+    # Keep this mapping simple: each schema field becomes one visible section.
     lines = [
         f"# {brief.title}",
         "",
@@ -217,7 +225,7 @@ def render_doc_markdown(brief: ResearchBrief) -> str:
 
 
 def render_task_markdown(plan: TaskPlan) -> str:
-    """Convert a task plan into markdown."""
+    """Turn validated task data into Notion-friendly markdown."""
     lines = [
         f"# {plan.title}",
         "",
@@ -242,7 +250,7 @@ def render_task_markdown(plan: TaskPlan) -> str:
 # -------------------------------------------------------------------
 
 def format_result_content(result) -> str:
-    """Convert MCP result content into readable text."""
+    """Convert MCP result chunks into text we can print for students."""
     chunks = []
     for item in result.content:
         if hasattr(item, "text"):
@@ -253,7 +261,7 @@ def format_result_content(result) -> str:
 
 
 def try_parse_result_json(result) -> Any:
-    """Try to parse the first text content item as JSON."""
+    """Parse JSON from an MCP result when the tool returns structured text."""
     if not result.content:
         return None
 
@@ -269,7 +277,7 @@ def try_parse_result_json(result) -> Any:
 
 
 def find_first_value(data: Any, keys: tuple[str, ...]) -> str | None:
-    """Recursively find the first non-empty string value for any key in keys."""
+    """Search nested tool output for values like page_id or page_url."""
     if isinstance(data, dict):
         for key in keys:
             value = data.get(key)
@@ -291,13 +299,13 @@ def find_first_value(data: Any, keys: tuple[str, ...]) -> str | None:
 
 
 def get_tool_schema_map(tool) -> dict[str, Any]:
-    """Return the input property map for a tool schema."""
+    """Return the input properties advertised by one MCP tool."""
     schema = getattr(tool, "inputSchema", None) or {}
     return schema.get("properties", {}) or {}
 
 
 def choose_first_key(schema_keys: set[str], candidates: list[str]) -> str | None:
-    """Pick the first candidate key that exists in the schema."""
+    """Pick the first parameter name that this MCP server actually supports."""
     for key in candidates:
         if key in schema_keys:
             return key
@@ -306,6 +314,8 @@ def choose_first_key(schema_keys: set[str], candidates: list[str]) -> str | None
 
 def extract_notion_page_id(value: str) -> str | None:
     """
+    Accept either a raw Notion page ID or a copied Notion URL.
+
     Extract a Notion page ID from:
     - plain 32-char hex
     - UUID with hyphens
@@ -327,12 +337,12 @@ def extract_notion_page_id(value: str) -> str | None:
 
 
 def normalize_tool_name(name: str) -> str:
-    """Normalize names so lookup survives minor formatting differences."""
+    """Make tool names comparable even if separators or casing differ."""
     return re.sub(r"[^a-z0-9]+", "_", (name or "").lower()).strip("_")
 
 
 def find_tool_by_name(tools: list[Any], expected_name: str) -> Any | None:
-    """Find a tool by exact or normalized name."""
+    """Find a tool by exact name first, then by normalized name."""
     expected_norm = normalize_tool_name(expected_name)
     for tool in tools:
         if getattr(tool, "name", "") == expected_name:
@@ -344,7 +354,7 @@ def find_tool_by_name(tools: list[Any], expected_name: str) -> Any | None:
 
 
 def parse_enabled_actions_payload(payload: Any) -> list[dict[str, Any]]:
-    """Extract Notion action metadata from list_enabled_zapier_actions response."""
+    """Pull enabled Notion action records out of Zapier's generic action list."""
     if isinstance(payload, list):
         actions: list[dict[str, Any]] = []
         for item in payload:
@@ -362,7 +372,7 @@ def choose_zapier_notion_action(
     name_tokens: tuple[str, ...],
     preferred_tool: str | None = None,
 ) -> dict[str, Any] | None:
-    """Choose an enabled Notion action by exact key first, then fuzzy token matching."""
+    """Choose the Notion action that best matches the workflow step we need."""
     for key in preferred_keys:
         for action in actions:
             if action.get("key") == key:
@@ -384,7 +394,7 @@ def choose_zapier_notion_action(
 
 
 def parse_action_param_keys(payload: Any) -> set[str]:
-    """Extract action parameter keys for a specific enabled action."""
+    """Read the parameter names Zapier expects for one enabled action."""
     keys: set[str] = set()
     for action in parse_enabled_actions_payload(payload):
         for param in action.get("params", []):
@@ -397,13 +407,20 @@ def parse_action_param_keys(payload: Any) -> set[str]:
 
 async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
     """
-    Load tools and return:
-    - tool name -> tool
-    - runtime config describing how to call notion create/retrieve/add-content
+    Discover the MCP tools available in this Zapier server.
+
+    Returns:
+    - tool name -> tool metadata
+    - runtime config for create/retrieve/add-content calls
+
+    The runtime config hides small Zapier differences from the rest of the file.
+    After this function, the main workflow can call "create page" without caring
+    whether this server uses legacy notion_* tools or generic execute_zapier_* tools.
     """
     tools = await client.list_tools()
     tool_map = {tool.name: tool for tool in tools}
 
+    # First try the simpler teaching path: direct Notion tools with clear names.
     create_tool = find_tool_by_name(tools, "notion_create_page")
     retrieve_tool = find_tool_by_name(tools, "notion_retrieve_a_page")
     add_tool = find_tool_by_name(tools, "notion_add_content_to_page")
@@ -417,6 +434,8 @@ async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
         retrieve_keys = set(retrieve_props.keys())
         add_keys = set(add_props.keys())
 
+        # MCP schemas tell us the exact argument names to send.
+        # This keeps the demo resilient when providers use title vs name, etc.
         title_key = choose_first_key(create_keys, ["title", "name"])
         parent_key = choose_first_key(
             create_keys,
@@ -445,6 +464,8 @@ async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
             "format_key": format_key,
         }
 
+    # If direct Notion tools are not present, use Zapier's newer generic tools.
+    # In this mode we first list enabled Notion actions, then execute by action key.
     has_generic_tools = {
         "list_enabled_zapier_actions",
         "execute_zapier_write_action",
@@ -455,6 +476,7 @@ async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
             "or generic execute_zapier_* tools."
         )
 
+    # Ask Zapier which Notion actions are enabled for this MCP server.
     actions_result = await client.call_tool("list_enabled_zapier_actions", {"app": "notion"})
     actions_payload = try_parse_result_json(actions_result)
     notion_actions = parse_enabled_actions_payload(actions_payload)
@@ -463,6 +485,7 @@ async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
             "No enabled Notion actions found in Zapier MCP. Enable Notion actions and retry."
         )
 
+    # Resolve the three app-level operations this lesson needs.
     create_action = choose_zapier_notion_action(
         notion_actions,
         preferred_keys=["create_page", "notion_create_page"],
@@ -499,6 +522,7 @@ async def get_tool_map(client: Client) -> tuple[dict[str, Any], dict[str, Any]]:
     retrieve_action_key = str(retrieve_action["key"])
     add_action_key = str(add_action["key"])
 
+    # Fetch each action schema so we can send the exact parameter names Zapier wants.
     create_schema_result = await client.call_tool(
         "list_enabled_zapier_actions", {"app": "notion", "action": create_action_key}
     )
@@ -550,10 +574,12 @@ async def preflight_verify_parent_access(
     runtime: dict[str, Any],
     parent_page_id: str,
 ) -> None:
-    """Verify that the configured parent page is accessible."""
+    """Call Notion once before writing so setup problems appear early."""
     retrieve_page_key = runtime["retrieve_page_key"]
     retrieve_tool_name = runtime["retrieve_tool_name"]
 
+    # Generic Zapier calls wrap action inputs inside app/action/params.
+    # Legacy Notion tools receive their inputs directly.
     if runtime["mode"] == "generic":
         args = {
             "app": "notion",
@@ -587,12 +613,17 @@ async def create_page_under_parent(
 ) -> tuple[str | None, str | None]:
     """
     Create a fresh Notion page under the configured parent page.
+
+    This is the first write action in the lesson. We print both the tool call and
+    the result so students can see exactly what crossed the MCP boundary.
+
     Returns (page_id, page_url_if_available).
     """
     create_tool_name = runtime["create_tool_name"]
     title_key = runtime["title_key"]
     parent_key = runtime["parent_key"]
 
+    # Build arguments in the shape required by the discovered runtime mode.
     if runtime["mode"] == "generic":
         args = {
             "app": "notion",
@@ -625,8 +656,8 @@ async def create_page_under_parent(
     page_id = find_first_value(parsed, ("page_id", "pageId", "id"))
     page_url = find_first_value(parsed, ("page_url", "url", "public_url"))
 
-    # Some generic Zapier actions return a follow-up question instead of executing.
-    # Auto-confirm so classroom runs remain non-interactive.
+    # Some generic Zapier actions ask a follow-up question instead of executing.
+    # For a classroom script, retry with explicit defaults so the run stays smooth.
     if runtime["mode"] == "generic" and not page_id:
         follow_up = find_first_value(parsed, ("followUpQuestion",))
         if follow_up:
@@ -665,7 +696,7 @@ async def add_markdown_to_page(
     page_id: str,
     markdown_text: str,
 ) -> None:
-    """Append generated markdown content to the created page."""
+    """Append the generated markdown to the page created in the previous step."""
     add_tool_name = runtime["add_tool_name"]
     page_key = runtime["add_page_key"]
     content_key = runtime["content_key"]
@@ -711,7 +742,7 @@ async def retrieve_page_url(
     runtime: dict[str, Any],
     page_id: str,
 ) -> str | None:
-    """Retrieve the created page and extract its web URL."""
+    """Retrieve the created page when the create call did not include a URL."""
     retrieve_tool_name = runtime["retrieve_tool_name"]
     retrieve_page_key = runtime["retrieve_page_key"]
 
@@ -754,7 +785,7 @@ async def main() -> None:
     selected_provider, selected_model = get_selected_provider_and_model(provider)
     writer_model = selected_model if selected_provider == "groq" else DEFAULT_OLLAMA_WRITER_MODEL
 
-    # 1) Validate required environment variables before any interactive/model work.
+    # Step 1: Validate setup before asking for input or spending tokens.
     validate_zapier_mcp_config()
     if not NOTION_PARENT_PAGE_ID:
         raise RuntimeError("Missing NOTION_PARENT_PAGE_ID in .env")
@@ -773,7 +804,7 @@ async def main() -> None:
     print_subheader("Runtime Inputs")
     print(pretty_json(choice))
 
-    # 2) Use LLM + schema based on selected mode.
+    # Step 2: Generate structured content, then render that structure as markdown.
     if choice.mode == "tasks":
         structured_output = generate_tasks(choice.topic, model=writer_model, provider=provider)
         markdown_text = render_task_markdown(structured_output)
@@ -792,7 +823,7 @@ async def main() -> None:
     client = Client(transport=transport)
 
     async with client:
-        # 3) MCP phase: verify access -> create page -> write markdown -> resolve URL.
+        # Step 3: MCP phase: verify access -> create page -> write markdown -> resolve URL.
         _tool_map, runtime = await get_tool_map(client)
 
         print_subheader("Notion MCP Runtime Mode")

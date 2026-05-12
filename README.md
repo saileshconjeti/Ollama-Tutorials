@@ -21,6 +21,10 @@ This material was prepared with assistance from **OpenAI Codex**, and every file
 - **Module 3**: [AI Agents](MODULE_3_AI_AGENTS.md)
   - Theory: [LEARN.md](tutorials/module-3-ai-agents/LEARN.md)
   - Code Walkthrough: [BUILD.md](tutorials/module-3-ai-agents/BUILD.md)
+- **Module 4**: [AI Evals - LLM-as-a-Judge](MODULE_4_AI_Evals.md)
+  - Theory: [LEARN.md](tutorials/module_4_ai_evals/LEARN.md)
+  - Code Walkthrough: [BUILD.md](tutorials/module_4_ai_evals/BUILD.md)
+  - Includes reference judging, pairwise judging, bias checks, and multi-judge aggregation.
 
 Module 2 now includes MCP + Notion integration tutorials:
 - `13_mcp_list_tools.py`
@@ -32,6 +36,7 @@ Module 2 now includes MCP + Notion integration tutorials:
 - `tutorials/module-1-generative-ai-basics-prompting-and-rag/`
 - `tutorials/module-2-workflow-patterns/`
 - `tutorials/module-3-ai-agents/`
+- `tutorials/module_4_ai_evals/`
 - `requirements.txt`
 - `README.md`
 
@@ -47,8 +52,8 @@ This structure is designed to scale as new tutorial sets are added.
 
 ## Setup by Operating System
 
-Use one shared `.venv` and one shared root `requirements.txt` for all modules.
-No module-specific requirements files are needed.
+Use one shared `.venv` and the shared root `requirements.txt` for Modules 1-3.
+Module 4 also includes a small module-local `requirements.txt` for standalone AI eval demos.
 
 ### macOS
 
