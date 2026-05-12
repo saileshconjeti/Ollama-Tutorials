@@ -24,6 +24,8 @@ For every new terminal session:
 source .venv/bin/activate
 ```
 
+Most workflow scripts accept `--provider groq` for Groq cloud API runs, while keeping local Ollama as the default provider.
+
 ## Module Topics
 
 - `08_prompt_chaining.py`: Multi-step prompt chain with structured intermediate state
@@ -81,6 +83,7 @@ python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --file tutoria
 
 - Separate model reasoning steps into explicit workflow stages
 - Add deterministic control via application code
+- Run the same workflow patterns with local Ollama or Groq cloud API inference
 - Route requests based on classification and inspect graph state
 - Use critique-revision loops for measurable output improvement
 - Bridge workflow patterns into app-executed tool loops

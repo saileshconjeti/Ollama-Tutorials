@@ -1,10 +1,10 @@
-# Ollama Tutorials for Students (Python + Personalized TA)
+# Generative and Agentic AI Tutorials (Python + Ollama + Groq)
 
-Practical LLM labs for **Generative and Agentic AI** using Ollama (local) and Groq (cloud).
+Practical LLM labs for **Generative and Agentic AI** using both Ollama for local model execution and Groq for cloud API-based inference.
 
 - Author: **Dr. Sailesh Conjeti**
 - Course: **Generative and Agentic AI**
-- Repository: **https://github.com/saileshconjeti/Ollama-Tutorials**
+- Repository: **https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26**
 
 ## Disclaimer
 
@@ -41,7 +41,7 @@ This structure is designed to scale as new tutorial sets are added.
 
 - Python 3.10+
 - Ollama (for local mode)
-- Groq account + API key (optional, for cloud free-tier mode)
+- Groq account + API key (for cloud API mode)
 - Terminal or PowerShell
 - Docker Desktop (recommended for Open WebUI)
 
@@ -128,7 +128,7 @@ pip install -r requirements.txt
 ollama serve
 ```
 
-## Pull Models
+## Pull Local Ollama Models
 
 For these tutorials:
 
@@ -152,7 +152,7 @@ Check installed models:
 ollama list
 ```
 
-## Choose LLM Provider (Local Ollama or Groq Free Tier)
+## Choose LLM Provider (Local Ollama or Groq Cloud API)
 
 The new shared client at `tutorials/llm_client.py` supports both providers.
 
@@ -185,7 +185,7 @@ ollama pull qwen3:4b
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat_groq.py
 ```
 
-### Mode B: Groq Free-Tier Cloud
+### Mode B: Groq Cloud API
 
 1. Add this to `.env`:
 

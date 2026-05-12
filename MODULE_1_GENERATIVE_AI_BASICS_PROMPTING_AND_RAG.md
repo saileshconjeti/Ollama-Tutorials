@@ -15,6 +15,7 @@ Module: **Module 1**
 - `04_structured_output.py`: Structured JSON output with schema validation
 - `05_embeddings.py`: Embeddings and vector intuition
 - `06_tiny_rag.py`: End-to-end tiny RAG demo
+- `*_groq.py` / `*_qroq.py`: Provider-aware variants for local Ollama or Groq cloud API chat generation
 - `Modelfile`: Personalized Teaching Assistant (TA)
 
 ## Run Order
@@ -47,7 +48,7 @@ I am a student in a practical course on generative and agentic AI. Help me under
 
 ## Learning Focus
 
-- Understand core local LLM interaction patterns
+- Understand core LLM interaction patterns with local Ollama and Groq cloud API options
 - Compare plain prompting vs retrieval-augmented prompting
 - Learn where structured output is useful
 - Build a reusable personalized TA baseline

@@ -24,6 +24,8 @@ For every new terminal session:
 source .venv/bin/activate
 ```
 
+Groq variants are available as `*_groq.py` scripts for cloud API runs; the base scripts use local Ollama.
+
 ## Module Topics
 
 - `16_react_agent_loop.py`: ReAct-style think-act-observe loop with explicit tools
@@ -46,6 +48,7 @@ python tutorials/module-3-ai-agents/19_multi_agent_supervisor.py
 ## Learning Focus
 
 - Understand how an agent loops over reasoning and actions
+- Compare local Ollama agents with Groq cloud API agent variants
 - Separate short-term execution from long-term user memory
 - Implement planning and stepwise execution with graph state
 - Coordinate multiple specialized agents under a supervisor

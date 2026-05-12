@@ -1,22 +1,22 @@
-# Updated Instructions: Groq Cloud Variants for Module 1 and Module 2
+# Updated Instructions: Groq Cloud API Runs for Module 1 and Module 2
 
-To support students with limited local compute, we will use Groq cloud variants for Module 1 and Module 2. This should make the labs smoother on lower-spec laptops.
+To support students with limited local compute, we will use Groq cloud API runs for Module 1 and Module 2. This should make the labs smoother on lower-spec laptops while preserving the same application workflows used with local Ollama.
 
 At the time of writing, Groq's free tier (around 500K tokens/day) is typically enough for classroom experimentation.
 
 Course repository:
-https://github.com/saileshconjeti/Ollama-Tutorials
+https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26
 
 ## 1) Read the module guides
 
 - Module 1 `BUILD.md`:
-https://github.com/saileshconjeti/Ollama-Tutorials/blob/main/tutorials/module-1-generative-ai-basics-prompting-and-rag/BUILD.md
+https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26/blob/main/tutorials/module-1-generative-ai-basics-prompting-and-rag/BUILD.md
 - Module 1 `LEARN.md`:
-https://github.com/saileshconjeti/Ollama-Tutorials/blob/main/tutorials/module-1-generative-ai-basics-prompting-and-rag/LEARN.md
+https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26/blob/main/tutorials/module-1-generative-ai-basics-prompting-and-rag/LEARN.md
 - Module 2 `BUILD.md`:
-https://github.com/saileshconjeti/Ollama-Tutorials/blob/main/tutorials/module-2-workflow-patterns/BUILD.md
+https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26/blob/main/tutorials/module-2-workflow-patterns/BUILD.md
 - Module 2 `LEARN.md`:
-https://github.com/saileshconjeti/Ollama-Tutorials/blob/main/tutorials/module-2-workflow-patterns/LEARN.md
+https://github.com/saileshconjeti/Generative-and-Agentic-AI-HAW-SoSe-26/blob/main/tutorials/module-2-workflow-patterns/LEARN.md
 
 ## 2) Environment setup (from repo root)
 
@@ -49,7 +49,7 @@ GROQ_MODEL=llama-3.1-8b-instant
 
 Do not commit `.env` or share your API key.
 
-## 5) Module 1 (Groq variants)
+## 5) Module 1 (Groq cloud API)
 
 ```bash
 python tutorials/module-1-generative-ai-basics-prompting-and-rag/01_chat_groq.py --provider groq
@@ -62,15 +62,15 @@ python tutorials/module-1-generative-ai-basics-prompting-and-rag/06_tiny_rag_qro
 
 Note: embeddings steps still use local Ollama.
 
-## 6) Module 2 (Groq variants)
+## 6) Module 2 (Groq cloud API)
 
 ```bash
-python tutorials/module-2-workflow-patterns/08_prompt_chaining_groq.py --provider groq --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
-python tutorials/module-2-workflow-patterns/09_routing_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/10_orchestrator_worker_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/11_evaluator_reflection_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/12_tool_calling_groq.py --provider groq
-python tutorials/module-2-workflow-patterns/15_mcp_groq_notion_writer.py
+python tutorials/module-2-workflow-patterns/08_prompt_chaining.py --provider groq --file tutorials/module-2-workflow-patterns/sample_meeting_minutes.txt --output tutorials/module-2-workflow-patterns/my_minutes_report.md
+python tutorials/module-2-workflow-patterns/09_routing.py --provider groq
+python tutorials/module-2-workflow-patterns/10_orchestrator_worker.py --provider groq
+python tutorials/module-2-workflow-patterns/11_evaluator_reflection.py --provider groq
+python tutorials/module-2-workflow-patterns/12_tool_calling.py --provider groq
+python tutorials/module-2-workflow-patterns/15_mcp_notion_writer.py --provider groq
 ```
 
 For MCP/Notion scripts (`13-15`), also include in `.env`:
