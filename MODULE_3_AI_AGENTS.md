@@ -24,7 +24,7 @@ For every new terminal session:
 source .venv/bin/activate
 ```
 
-Groq variants are available as `*_groq.py` scripts for cloud API runs; the base scripts use local Ollama.
+Each tutorial accepts `--provider ollama|groq`. If the argument is omitted, the script uses `LLM_PROVIDER` from `.env` and falls back to local Ollama.
 
 ## Module Topics
 
@@ -45,10 +45,16 @@ python tutorials/module-3-ai-agents/18_planner_executor_agent.py
 python tutorials/module-3-ai-agents/19_multi_agent_supervisor.py
 ```
 
+To force Groq for a single run:
+
+```bash
+python tutorials/module-3-ai-agents/16_react_agent_loop.py --provider groq
+```
+
 ## Learning Focus
 
 - Understand how an agent loops over reasoning and actions
-- Compare local Ollama agents with Groq cloud API agent variants
+- Compare local Ollama agents with Groq cloud API runs using the same tutorial files
 - Separate short-term execution from long-term user memory
 - Implement planning and stepwise execution with graph state
 - Coordinate multiple specialized agents under a supervisor

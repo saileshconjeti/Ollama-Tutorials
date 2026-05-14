@@ -11,18 +11,12 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 from typing import List
 
 from pydantic import BaseModel
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from agent_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 MEMORY_PATH = Path("tutorials/module-3-ai-agents/data/agent_memory.json")
 DEFAULT_MESSAGE = "Hi, I am Priya. I prefer concise answers with bullet points and practical examples."
@@ -92,11 +86,7 @@ def merge_unique(base: list[str], incoming: list[str], limit: int = 10) -> list[
     return merged[:limit]
 
 
-def detect_memory_updates(
-    message: str,
-    model: str,
-    provider: str | None = None,
-) -> MemoryUpdate:
+def detect_memory_updates(message: str) -> MemoryUpdate:
     # Student note: step 1 is "extraction".
     # We convert messy human text into clean fields before writing memory.
     # Student note: structured extraction is safer than regex-only parsing
@@ -114,17 +104,10 @@ Rules:
 - Return empty lists if no new items.
 """,
         schema_model=MemoryUpdate,
-        model=model,
-        provider=provider,
     )
 
 
-def build_reply(
-    message: str,
-    memory: UserMemory,
-    model: str,
-    provider: str | None = None,
-) -> AgentReply:
+def build_reply(message: str, memory: UserMemory) -> AgentReply:
     # Student note: step 2 is "generation".
     # The model receives both latest message + stored memory for personalization.
     # Student note: we pass both JSON memory and readable memory context.
@@ -151,8 +134,6 @@ Guidelines:
 - In used_memory_items, include only memory items that directly influenced your reply.
 """,
         schema_model=AgentReply,
-        model=model,
-        provider=provider,
     )
 
 
@@ -165,20 +146,33 @@ def get_message() -> str:
 
 
 if __name__ == "__main__":
-    parser = build_provider_parser("Run a memory-backed agent with Ollama or Groq.")
-    args = parser.parse_args()
-    provider = args.provider
-    selected_provider, selected_model = get_selected_provider_and_model(provider)
-
     print_header("17 - MEMORY AGENT")
-    print(f"Provider: {selected_provider} | Model in use: {selected_model}")
+    print("What this demonstrates: an agent can extract useful user facts, store them, and reuse them in later replies.")
+    print_step(1, "Inspecting memory flow")
+    print_ascii_tree(
+        """
+        Latest User Message
+            |
+            v
+        Memory Extraction
+            |
+            v
+        Merge with JSON Memory File
+            |
+            v
+        Memory Context
+            |
+            v
+        Personalized Agent Reply
+        """
+    )
 
     # Student note: we track whether memory file existed only for friendly logging.
     # The actual memory object always comes from `load_memory()`.
     memory_exists = MEMORY_PATH.exists()
     memory = load_memory()
 
-    print_subheader("MEMORY LOAD")
+    print_step(2, "Loading memory from disk")
     if memory_exists:
         print(f"Loaded existing memory from: {MEMORY_PATH}")
     else:
@@ -188,11 +182,8 @@ if __name__ == "__main__":
     print(pretty_json(memory))
 
     user_message = get_message()
-    updates = detect_memory_updates(
-        user_message,
-        model=selected_model,
-        provider=provider,
-    )
+    print_step(3, "Extracting memory updates from message")
+    updates = detect_memory_updates(user_message)
 
     # Apply update only when new signal is present.
     # Empty name means "no update", so we preserve existing value.
@@ -214,14 +205,12 @@ if __name__ == "__main__":
     print_subheader("MEMORY CONTEXT FOR REPLY")
     print(build_memory_context(memory))
 
-    reply = build_reply(
-        user_message,
-        memory,
-        model=selected_model,
-        provider=provider,
-    )
+    print_step(4, "Building reply with memory context")
+    reply = build_reply(user_message, memory)
     print_subheader("AGENT REPLY")
     print(reply.reply)
 
     print_subheader("MEMORY USED IN REPLY")
     print(pretty_json(reply.used_memory_items))
+    print_step(5, "What to observe")
+    print("Memory is not magic context: the script explicitly loads, updates, saves, and passes memory into the next prompt.")

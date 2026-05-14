@@ -23,16 +23,28 @@ from tutorials.llm_client import (
     parse_provider_from_cli,
     stream_chat,
 )
+from tutorials.terminal_utils import print_header, print_json, print_kv, print_step
 
 provider = parse_provider_from_cli("Run a streaming chat example with Ollama or Groq.")
 selected_provider, selected_model = get_selected_provider_and_model(provider)
-print(f"Provider: {selected_provider} | Model: {selected_model}")
+messages = [
+    {"role": "user", "content": "Give me 10 short practical ideas for using local LLMs in education."}
+]
+
+print_header("Streaming with Provider Switching")
+print("What this demonstrates: both local and cloud providers can stream partial text.")
+print_step(1, "Checking provider and model")
+print_kv("Provider", selected_provider)
+print_kv("Model", selected_model)
+
+print_step(2, "Preparing prompt")
+print_json(messages)
+
+print_step(3, f"Opening stream from {selected_provider}")
 
 # Streaming is an application-layer feature: your Python loop prints chunks as they arrive.
 stream = stream_chat(
-    messages=[
-        {"role": "user", "content": "Give me 10 short practical ideas for using local LLMs in education."}
-    ],
+    messages=messages,
     provider=provider,
 )
 
@@ -42,3 +54,6 @@ for content in stream:
 
 # End with a newline so the terminal prompt appears cleanly after streamed text.
 print()
+
+print_step(4, "What to observe")
+print("The loop prints each chunk immediately; the final answer is assembled visually in the terminal.")

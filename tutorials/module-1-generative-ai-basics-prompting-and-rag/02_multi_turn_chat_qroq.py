@@ -19,10 +19,15 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import chat, get_selected_provider_and_model, parse_provider_from_cli
+from tutorials.terminal_utils import print_header, print_json, print_kv, print_step
 
 provider = parse_provider_from_cli("Run a multi-turn chat example with Ollama or Groq.")
 selected_provider, selected_model = get_selected_provider_and_model(provider)
-print(f"Provider: {selected_provider} | Model: {selected_model}")
+print_header("Multi-Turn Chat with Provider Switching")
+print("What this demonstrates: the app sends conversation history so the model has context.")
+print_step(1, "Checking provider and model")
+print_kv("Provider", selected_provider)
+print_kv("Model", selected_model)
 
 # In local/cloud model workflows, your application is responsible for conversation memory.
 # Here, prior turns are explicitly included so the model can answer with context.
@@ -33,6 +38,10 @@ messages = [
     {"role": "user", "content": "Give me a real classroom example."},
 ]
 
+print_step(2, "Preparing conversation history")
+print_json(messages)
+
+print_step(3, f"Sending full history to {selected_provider}")
 response = chat(
     messages=messages,
     provider=provider,
@@ -40,4 +49,8 @@ response = chat(
 
 # Expected observation:
 # the output should feel like a continuation of the prior classroom-style discussion.
+print_step(4, "Assistant output received")
 print(response)
+
+print_step(5, "What to observe")
+print("Provider switching changes where inference happens, not the core multi-turn pattern.")

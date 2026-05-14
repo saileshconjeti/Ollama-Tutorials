@@ -11,19 +11,12 @@
 from __future__ import annotations
 
 import operator
-import sys
-from pathlib import Path
 from typing import Annotated, List, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from agent_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 DEFAULT_TASK = "Design an AI-agent mini project for students to complete in one week."
 
@@ -63,8 +56,6 @@ class TeamState(TypedDict, total=False):
     plan: dict
     worker_outputs: Annotated[list[dict], operator.add]
     report: dict
-    provider: str
-    model: str
 
 
 def plan_node(state: TeamState) -> TeamState:
@@ -81,8 +72,6 @@ User task:
 {state['user_task']}
 """,
         schema_model=DelegationPlan,
-        model=state["model"],
-        provider=state["provider"],
     )
     # Student note: initialize `worker_outputs` so branch returns can be merged.
     return {"plan": plan.model_dump(), "worker_outputs": []}
@@ -111,8 +100,6 @@ Mission:
 {state['plan'].get('mission', state['user_task'])}
 """,
         schema_model=WorkerOutput,
-        model=state["model"],
-        provider=state["provider"],
     )
     return {"worker_outputs": [out.model_dump()]}
 
@@ -131,8 +118,6 @@ Mission:
 {state['plan'].get('mission', state['user_task'])}
 """,
         schema_model=WorkerOutput,
-        model=state["model"],
-        provider=state["provider"],
     )
     return {"worker_outputs": [out.model_dump()]}
 
@@ -151,8 +136,6 @@ Mission:
 {state['plan'].get('mission', state['user_task'])}
 """,
         schema_model=WorkerOutput,
-        model=state["model"],
-        provider=state["provider"],
     )
     return {"worker_outputs": [out.model_dump()]}
 
@@ -175,8 +158,6 @@ Worker outputs:
 {state['worker_outputs']}
 """,
         schema_model=SupervisorReport,
-        model=state["model"],
-        provider=state["provider"],
     )
     return {"report": report.model_dump()}
 
@@ -214,25 +195,30 @@ def get_task() -> str:
 
 
 if __name__ == "__main__":
-    parser = build_provider_parser("Run multi-agent supervisor graph with Ollama or Groq.")
-    args = parser.parse_args()
-    provider = args.provider
-    selected_provider, selected_model = get_selected_provider_and_model(provider)
-
     print_header("19 - MULTI AGENT SUPERVISOR")
-    print(f"Provider: {selected_provider} | Model in use: {selected_model}")
+    print("What this demonstrates: a supervisor delegates work to several agents and synthesizes their outputs.")
+    print_step(1, "Inspecting supervisor graph")
+    print_ascii_tree(
+        """
+        Mission
+            |
+            v
+        Supervisor Planner
+            |
+            +--> Researcher
+            +--> Architect
+            +--> Reviewer
+            |
+            v
+        Supervisor Synthesis
+        """
+    )
     app = build_graph()
     task = get_task()
 
     # Student note: graph result includes intermediate artifacts (plan + workers)
     # and final synthesis (report), useful for teaching and debugging.
-    result = app.invoke(
-        {
-            "user_task": task,
-            "provider": selected_provider,
-            "model": selected_model,
-        }
-    )
+    result = app.invoke({"user_task": task})
     # Result contains plan, merged worker outputs, and supervisor report.
 
     print_subheader("DELEGATION PLAN")
@@ -244,3 +230,5 @@ if __name__ == "__main__":
 
     print_subheader("SUPERVISOR REPORT")
     print(pretty_json(result["report"]))
+    print_step(2, "What to observe")
+    print("The three workers run from the same plan, and the supervisor merges their different perspectives.")

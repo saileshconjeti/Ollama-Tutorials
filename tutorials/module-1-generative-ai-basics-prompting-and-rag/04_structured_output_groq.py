@@ -24,10 +24,15 @@ from tutorials.llm_client import (
     parse_provider_from_cli,
     structured_chat,
 )
+from tutorials.terminal_utils import print_header, print_json, print_kv, print_step, print_text_preview
 
 provider = parse_provider_from_cli("Run a structured output example with Ollama or Groq.")
 selected_provider, selected_model = get_selected_provider_and_model(provider)
-print(f"Provider: {selected_provider} | Model: {selected_model}")
+print_header("Structured Output with Provider Switching")
+print("What this demonstrates: a JSON schema turns model text into application data.")
+print_step(1, "Checking provider and model")
+print_kv("Provider", selected_provider)
+print_kv("Model", selected_model)
 
 # The schema tells the model the shape of the response we want.
 # This is useful when your app needs machine-readable fields instead of free-form prose.
@@ -55,6 +60,11 @@ Prerequisites: Python programming, machine learning basics, APIs
 Goals: Understand prompting, local inference, RAG, tool calling, and agent design.
 """
 
+print_step(2, "Inspecting input text and required schema")
+print_text_preview("Input text", text, max_chars=500)
+print_json(schema)
+
+print_step(3, f"Sending structured-output request to {selected_provider}")
 # Request a schema-constrained extraction from the input text.
 content = structured_chat(
     messages=[
@@ -69,5 +79,12 @@ content = structured_chat(
 
 # Parse and print pretty JSON for easy inspection in class.
 # Expected observation: keys required by the schema are present.
+print_step(4, "Raw model response")
+print(content)
+
+print_step(5, "Parsed JSON")
 parsed = json.loads(content)
 print(json.dumps(parsed, indent=2))
+
+print_step(6, "What to observe")
+print("The same schema can be reused across providers, but the application still validates the JSON before using it.")

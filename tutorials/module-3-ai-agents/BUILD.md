@@ -13,12 +13,16 @@ Run and explain four agent patterns in sequence:
 
 Each script is intentionally verbose in logging and comments so students can trace internal decisions.
 
+The finished version consolidates local Ollama and cloud Groq execution into the same four tutorial files. The previous split-provider `*_groq.py` scripts have been archived under `archive/provider-consolidation-2026-05-14/`.
+
+Terminal output now includes narrated walkthrough steps, compact ASCII agent-flow diagrams, visible loop iterations, tool/action decisions, observations, memory updates, graph artifacts, provider/model labels, and classroom-friendly setup errors.
+
 ## Prerequisites
 
 - `ollama serve` is running
 - Python virtual environment is active
 - dependencies installed from repo root: `python -m pip install -r requirements.txt`
-- for Groq variants (`*_groq.py`), `GROQ_API_KEY` is set in `.env`
+- for Groq runs, `GROQ_API_KEY` is set in `.env`
 - model available:
   - `qwen2.5:0.5b` (or set `OLLAMA_CHAT_MODEL` to your preferred local model)
 
@@ -37,6 +41,7 @@ GROQ_MODEL=llama-3.1-8b-instant
 Notes:
 - Keep real keys only in local `.env`; do not commit this file.
 - `.gitignore` excludes `.env` and `.env.*` so secrets are not pushed.
+- `LLM_PROVIDER` is optional. If omitted, Module 3 defaults to local Ollama.
 
 ## Environment Setup
 
@@ -57,7 +62,7 @@ source .venv/bin/activate
 
 ## Run Order
 
-Run from repository root:
+Run from repository root. These use `LLM_PROVIDER` from `.env`, defaulting to Ollama:
 
 ```bash
 python tutorials/module-3-ai-agents/16_react_agent_loop.py
@@ -66,16 +71,18 @@ python tutorials/module-3-ai-agents/18_planner_executor_agent.py
 python tutorials/module-3-ai-agents/19_multi_agent_supervisor.py
 ```
 
-## Groq Variant Execution (`*_groq.py`)
+## Provider Selection
 
-Use these to run Module 3 agents with provider selection (`--provider ollama|groq`):
+Pass `--provider ollama` or `--provider groq` to override `.env` for one run:
 
 ```bash
-python tutorials/module-3-ai-agents/16_react_agent_loop_groq.py --provider groq
-python tutorials/module-3-ai-agents/17_memory_agent_groq.py --provider groq
-python tutorials/module-3-ai-agents/18_planner_executor_agent_groq.py --provider groq
-python tutorials/module-3-ai-agents/19_multi_agent_supervisor_groq.py --provider groq
+python tutorials/module-3-ai-agents/16_react_agent_loop.py --provider groq
+python tutorials/module-3-ai-agents/17_memory_agent.py --provider groq
+python tutorials/module-3-ai-agents/18_planner_executor_agent.py --provider groq
+python tutorials/module-3-ai-agents/19_multi_agent_supervisor.py --provider groq
 ```
+
+For `18_planner_executor_agent.py`, Groq runs use `llama-3.3-70b-versatile` for better planner/executor JSON quality.
 
 Recommended lecture pacing: `16 -> 17 -> 18 -> 19`.  
 Reason: this order moves from single-loop autonomy to memory, then to graph orchestration.
@@ -87,13 +94,14 @@ Reason: this order moves from single-loop autonomy to memory, then to graph orch
 - structured decision per iteration (`AgentStep`)
 - explicit tool dispatch in Python (`run_tool`)
 - feedback cycle using trajectory as short-term memory
+- classroom-style event streaming for each internal phase
 - guardrails:
   - bounded loop via `MAX_STEPS`
   - "must use tool evidence" before `finish`
 
 ### What students should observe in output
 
-- `THOUGHT` and `ACTION` per step
+- `Thought` and `Action` per step
 - tool observations returning to the next prompt
 - stop condition when action becomes `finish`
 - Python `for/else` behavior when max steps are hit without break
@@ -121,6 +129,7 @@ Extract deadline and office-hour reminders from notes, compute 44+58, and give a
 ### What students should observe in output
 
 - `MEMORY BEFORE`, `MEMORY UPDATE`, `MEMORY AFTER`
+- readable `MEMORY CONTEXT FOR REPLY`
 - continuity across script reruns
 - explainability via `used_memory_items`
 
@@ -146,6 +155,7 @@ Hi, I am Priya. I prefer concise answers with bullet points and practical exampl
 - conditional routing by role (`route_from_dispatch`)
 - specialist loop executes until `step_index` reaches plan length
 - reviewer synthesizes full execution into `final_report`
+- structured-output unwrapping for provider responses that wrap JSON in keys like `plan`, `execution`, or `final_report`
 
 ### What students should observe in output
 
@@ -190,23 +200,27 @@ Design an internal HR assistant project with privacy constraints and clear escal
 Create a capstone project for healthcare students to summarize clinical notes with safety checks.
 ```
 
+## Shared Support Files
+
+- `agent_utils.py`
+  - provider/model resolution for Ollama and Groq
+  - structured JSON calls with validation, retry, JSON block extraction, and optional wrapper-key unwrapping
+  - actionable setup errors for missing keys, unavailable models, or failed requests
+- `tutorials/terminal_utils.py`
+  - shared terminal formatting helpers used across tutorial modules
+  - plain ASCII headers, steps, diagrams, previews, streaming text, and error messages
+- `data/agent_memory.json`
+  - generated by `17_memory_agent.py`
+  - safe to inspect or reset during demos when you want a clean memory state
+
 ## Troubleshooting
 
-- If Ollama is not running, model calls fail immediately.
+- If Ollama is not running, the script prints an actionable error with the model pull command.
+- If Groq is selected and `GROQ_API_KEY` is missing, the script explains how to add it to `.env`.
 - If responses are weak, switch model with `OLLAMA_CHAT_MODEL`.
 - If memory behavior seems stale, inspect:
   - `tutorials/module-3-ai-agents/data/agent_memory.json`
+- To reset the memory demo, delete or edit:
+  - `tutorials/module-3-ai-agents/data/agent_memory.json`
 - If graph output seems confusing, compare printed sections in order:
   - planner -> workers/specialists -> reviewer/supervisor
-
-## Teaching Notes
-
-- Contrast with Module 2:
-  - Module 2: deterministic workflow control
-  - Module 3: autonomous loops, memory, delegation, synthesis
-- Ask students to map each printed section to code nodes/functions.
-- Emphasize safety controls:
-  - schema-constrained outputs
-  - explicit Python tool execution
-  - bounded loops
-  - typed shared state

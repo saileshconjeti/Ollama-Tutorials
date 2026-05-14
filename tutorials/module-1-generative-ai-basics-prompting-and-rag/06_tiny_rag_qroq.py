@@ -22,6 +22,14 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import chat, get_selected_provider_and_model, parse_provider_from_cli
+from tutorials.terminal_utils import (
+    print_ascii_tree,
+    print_header,
+    print_kv,
+    print_prompt_preview,
+    print_step,
+    print_text_preview,
+)
 
 # Small in-memory knowledge base used for retrieval in this teaching demo.
 # In production, this would often come from a vector database or indexed document store.
@@ -148,8 +156,38 @@ if __name__ == "__main__":
         "Run a tiny RAG demo with Ollama embeddings and Ollama/Groq chat generation."
     )
     selected_provider, selected_model = get_selected_provider_and_model(provider)
-    print(f"Provider: {selected_provider} | Chat model: {selected_model}")
-    print("Embedding provider: ollama | Embedding model: qwen3-embedding:0.6b")
+    print_header("Tiny RAG Pipeline with Provider Switching")
+    print("What this demonstrates: retrieval stays local with Ollama embeddings, while answer generation can use Ollama or Groq.")
+
+    print_step(1, "Inspecting RAG data flow")
+    print_ascii_tree(
+        """
+        User Question
+            |
+            v
+        Ollama Embedding Model
+            |
+            v
+        Top Matching Course Chunks
+            |
+            v
+        Grounded Prompt
+            |
+            v
+        Selected Chat Provider
+            |
+            v
+        RAG Answer
+        """
+    )
+
+    print_step(2, "Checking models and document collection")
+    print_kv("Chat provider", selected_provider)
+    print_kv("Chat model", selected_model)
+    print_kv("Embedding provider", "ollama")
+    print_kv("Embedding model", "qwen3-embedding:0.6b")
+    print_kv("Documents loaded", len(documents))
+    print_kv("Chunking strategy", "one short teaching paragraph per in-memory document")
 
     default_query = "What is the difference between RAG and fine-tuning?"
     user_query = input(
@@ -159,42 +197,29 @@ if __name__ == "__main__":
 
     query = user_query if user_query else default_query
 
-    print("\nRunning no-RAG answer...\n")
+    print_step(3, "Running baseline answer without retrieval")
+    print_kv("User query", query)
     no_rag_answer = answer_without_rag(query, provider=provider)
 
-    print("Running retrieval...\n")
+    print_step(4, "Embedding query and retrieving top chunks")
     retrieved = retrieve(query, documents, top_k=3)
+    for rank, (score, doc_id, doc_text) in enumerate(retrieved, start=1):
+        print(f"Rank {rank} | Document {doc_id} | similarity={score:.4f}")
+        print_text_preview("Chunk", doc_text, max_chars=220)
+        print()
 
-    print("Running RAG-grounded answer...\n")
+    print_step(5, f"Building grounded prompt and sending to {selected_provider}")
     context, rag_answer = answer_with_rag(query, retrieved, provider=provider)
+    print_prompt_preview(context, max_chars=700)
 
-    print("=" * 80)
-    print("QUESTION:\n")
-    print(query)
-
-    print("\n" + "=" * 80)
-    print("TOP RETRIEVED DOCUMENTS:\n")
-    for score, doc_id, doc_text in retrieved:
-        preview = doc_text.strip().replace("\n", " ")
-        if len(preview) > 160:
-            preview = preview[:160] + "..."
-        print(f"Document {doc_id} | similarity={score:.4f}")
-        print(f"Preview: {preview}\n")
-
-    print("=" * 80)
-    print("CONTEXT SENT TO MODEL (RAG):\n")
-    print(context)
-
-    print("\n" + "=" * 80)
-    print("ANSWER WITHOUT RAG:\n")
+    print_step(6, "Comparing outputs")
+    print("ANSWER WITHOUT RAG:")
     print(no_rag_answer)
 
-    print("\n" + "=" * 80)
-    print("ANSWER WITH RAG:\n")
+    print("\nANSWER WITH RAG:")
     print(rag_answer)
 
-    print("\n" + "=" * 80)
-    print("TEACHING NOTE:\n")
+    print_step(7, "What to observe")
     print(
         "Compare whether the RAG answer is more grounded, more specific, and cites the retrieved documents. "
         "If the retrieval corpus is weak or the wrong chunks are retrieved, the RAG answer may still be limited."

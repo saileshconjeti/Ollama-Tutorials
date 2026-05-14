@@ -57,7 +57,15 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, pretty_json, print_header, print_subheader
+from workflow_utils import (
+    ask_ollama_structured,
+    pretty_json,
+    print_actionable_error,
+    print_ascii_tree,
+    print_header,
+    print_step,
+    print_subheader,
+)
 
 load_dotenv(override=True)
 
@@ -74,10 +82,28 @@ LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
 def validate_zapier_mcp_config() -> None:
     """Check the MCP connection settings before students get deep into the demo."""
     if not ZAPIER_MCP_URL:
-        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
+        print_actionable_error(
+            "ZAPIER_MCP_URL is missing in .env.",
+            "The MCP client needs the Zapier server URL before it can write generated content to Notion.",
+            [
+                "Open Zapier MCP and copy the Streamable HTTP server URL.",
+                "Add ZAPIER_MCP_URL=your_server_url to .env.",
+                "Re-run this script.",
+            ],
+        )
+        raise SystemExit(1)
     has_url_token = "token=" in ZAPIER_MCP_URL
     if not ZAPIER_MCP_API_KEY and not has_url_token:
-        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env, or include ?token=... in ZAPIER_MCP_URL")
+        print_actionable_error(
+            "ZAPIER_MCP_API_KEY is missing.",
+            "The MCP server requires authentication before it will accept Notion tool calls.",
+            [
+                "Add ZAPIER_MCP_API_KEY=your_key_here to .env.",
+                "Or use a ZAPIER_MCP_URL that already includes a token parameter.",
+                "Re-run this script.",
+            ],
+        )
+        raise SystemExit(1)
     if not has_url_token and ZAPIER_MCP_URL.rstrip("/") == LEGACY_ZAPIER_MCP_URL:
         raise RuntimeError(
             "ZAPIER_MCP_URL is set to Zapier's old generic connect endpoint.\n"
@@ -788,7 +814,16 @@ async def main() -> None:
     # Step 1: Validate setup before asking for input or spending tokens.
     validate_zapier_mcp_config()
     if not NOTION_PARENT_PAGE_ID:
-        raise RuntimeError("Missing NOTION_PARENT_PAGE_ID in .env")
+        print_actionable_error(
+            "NOTION_PARENT_PAGE_ID is missing in .env.",
+            "The demo creates a new Notion child page and needs a parent page location.",
+            [
+                "Copy the parent Notion page URL or page ID.",
+                "Add NOTION_PARENT_PAGE_ID=your_page_id_or_url to .env.",
+                "Share that Notion page with the Zapier integration.",
+            ],
+        )
+        raise SystemExit(1)
     normalized_parent_page_id = extract_notion_page_id(NOTION_PARENT_PAGE_ID)
     if not normalized_parent_page_id:
         raise RuntimeError(
@@ -797,14 +832,37 @@ async def main() -> None:
 
     choice = get_runtime_inputs()
 
-    print_header("15 - MCP Notion Writer")
-    print("Pattern: generate useful content, create a fresh Notion page, and write into it")
+    print_header("15 - MCP NOTION WRITER")
+    print("What this demonstrates: an LLM creates structured content, then MCP writes that content into an external app.")
+    print_step(1, "Inspecting LLM-to-MCP flow")
+    print_ascii_tree(
+        """
+        Topic + Mode
+            |
+            v
+        LLM Structured Output
+            |
+            v
+        Render Markdown
+            |
+            v
+        MCP Create Notion Page
+            |
+            v
+        MCP Add Markdown Content
+            |
+            v
+        Notion Page URL
+        """
+    )
+    print_step(2, "Checking provider, model, and runtime inputs")
     print(f"Provider: {selected_provider} | Model: {writer_model}")
 
     print_subheader("Runtime Inputs")
     print(pretty_json(choice))
 
     # Step 2: Generate structured content, then render that structure as markdown.
+    print_step(3, "Generating structured content with the selected LLM")
     if choice.mode == "tasks":
         structured_output = generate_tasks(choice.topic, model=writer_model, provider=provider)
         markdown_text = render_task_markdown(structured_output)
@@ -824,13 +882,16 @@ async def main() -> None:
 
     async with client:
         # Step 3: MCP phase: verify access -> create page -> write markdown -> resolve URL.
+        print_step(4, "Discovering Notion MCP tools")
         _tool_map, runtime = await get_tool_map(client)
 
         print_subheader("Notion MCP Runtime Mode")
         print(runtime["mode"])
 
+        print_step(5, "Verifying parent page access")
         await preflight_verify_parent_access(client, runtime, normalized_parent_page_id)
 
+        print_step(6, "Creating Notion page")
         page_id, page_url = await create_page_under_parent(
             client, runtime, normalized_parent_page_id, choice.page_title
         )
@@ -843,9 +904,11 @@ async def main() -> None:
         print_subheader("Created Page ID")
         print(page_id)
 
+        print_step(7, "Adding generated markdown to Notion")
         await add_markdown_to_page(client, runtime, page_id, markdown_text)
 
         if not page_url:
+            print_step(8, "Retrieving page URL")
             page_url = await retrieve_page_url(client, runtime, page_id)
 
         print_subheader("Done")
@@ -853,6 +916,8 @@ async def main() -> None:
 
         print_subheader("New Notion Page Link")
         print(page_url or "[page URL not found]")
+        print_step(9, "What to observe")
+        print("The LLM produced content, but all external side effects happened through explicit MCP tool calls.")
 
 
 if __name__ == "__main__":

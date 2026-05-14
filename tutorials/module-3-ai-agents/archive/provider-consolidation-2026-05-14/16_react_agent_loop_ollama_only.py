@@ -11,23 +11,16 @@
 from __future__ import annotations
 
 import re
-import sys
 import time
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from tutorials.llm_client import build_provider_parser
-from agent_utils import ask_ollama_structured, get_selected_provider_and_model, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 DEFAULT_TASK = "Find two key exam reminders from local notes and also compute 18 + 27."
 # Guardrail so the agent cannot loop forever.
-MAX_STEPS = 10
+MAX_STEPS = 5
 STREAM_DELAY = 0.01
 
 # Small local knowledge source used by the tool.
@@ -45,11 +38,8 @@ class AgentStep(BaseModel):
     # This is easier to debug than free-form text because fields are predictable.
     thought: str
     action: Literal["search_notes", "math_add", "finish"]
-    # Student note: tool steps need action_input; finish steps can leave it empty.
-    # Defaults make the loop tolerant when a provider omits fields that are not
-    # relevant to the current action.
-    action_input: str = ""
-    final_answer: str = ""
+    action_input: str
+    final_answer: str
 
 
 class ToolResult(BaseModel):
@@ -126,9 +116,6 @@ Rules:
 - Choose one action per step.
 - Use tools when needed before finishing.
 - Keep reasoning concise.
-- Always return thought, action, action_input, and final_answer.
-- For search_notes and math_add, set final_answer to "".
-- For finish, set action_input to "" and put the complete response in final_answer.
 
 User task:
 {user_task}
@@ -164,13 +151,8 @@ def get_task() -> str:
 
 
 if __name__ == "__main__":
-    parser = build_provider_parser("Run a ReAct agent loop with Ollama or Groq.")
-    args = parser.parse_args()
-    provider = args.provider
-    selected_provider, selected_model = get_selected_provider_and_model(provider)
-
     print_header("16 - REACT AGENT LOOP")
-    print("What this demonstrates: the model chooses one action per loop, while Python executes tools and records observations.")
+    print("What this demonstrates: an agent repeatedly decides, acts with a tool, observes the result, and updates its trajectory.")
     print_step(1, "Inspecting agent loop")
     print_ascii_tree(
         """
@@ -190,8 +172,7 @@ if __name__ == "__main__":
         Next loop iteration
         """
     )
-    print_step(2, "Checking provider and available tools")
-    print(f"Provider: {selected_provider} | Model in use: {selected_model}")
+    print_step(2, "Available tools")
     print("- search_notes: search local course notes")
     print("- math_add: add two numbers")
     print("- finish: stop the loop with a final answer")
@@ -218,8 +199,6 @@ if __name__ == "__main__":
         decision = ask_ollama_structured(
             user_prompt=build_prompt(task, trajectory),
             schema_model=AgentStep,
-            model=selected_model,
-            provider=provider,
         )
         stream_event(step_index, "model", "Received structured decision")
 

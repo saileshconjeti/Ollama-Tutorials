@@ -10,6 +10,10 @@ Practical LLM labs for **Generative and Agentic AI** using both Ollama for local
 
 This material was prepared with assistance from **OpenAI Codex**, and every file in this repository has been manually reviewed and verified by the author before classroom use.
 
+## Classroom Terminal Walkthroughs
+
+The runnable tutorials now print narrated terminal walkthroughs for live demos. Outputs include step headers, provider/model information, prompt or context previews, ASCII data-flow diagrams where useful, intermediate JSON/tool/retrieval artifacts, streaming output where supported, and setup errors with concrete fix steps.
+
 ## Class Schedule and Guides
 
 - **Module 1**: [Generative AI Basics - Prompting and RAG](MODULE_1_GENERATIVE_AI_BASICS_PROMPTING_AND_RAG.md)

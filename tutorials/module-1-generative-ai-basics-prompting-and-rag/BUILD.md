@@ -27,6 +27,8 @@ python -m pip install -r requirements.txt
 
 Run from repository root.
 
+These scripts print narrated terminal walkthroughs: each run identifies the provider/model, shows the prompt or input being sent, prints intermediate artifacts such as structured JSON, embeddings metadata, retrieved RAG chunks, and includes short "what to observe" notes for classroom discussion.
+
 ### Local Ollama Workflow (baseline)
 
 ```bash

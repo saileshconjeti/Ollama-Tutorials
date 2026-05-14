@@ -21,8 +21,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from tutorials.llm_client import build_provider_parser
-from agent_utils import ask_ollama_structured, get_selected_provider_and_model, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
+from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 MEMORY_PATH = Path("tutorials/module-3-ai-agents/data/agent_memory.json")
 DEFAULT_MESSAGE = "Hi, I am Priya. I prefer concise answers with bullet points and practical examples."

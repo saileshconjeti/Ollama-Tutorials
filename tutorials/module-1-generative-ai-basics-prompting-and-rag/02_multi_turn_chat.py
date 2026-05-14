@@ -9,7 +9,16 @@
 # Author: Dr. Sailesh Conjeti
 # Course: Generative and Agentic AI
 
+import sys
+from pathlib import Path
+
 from ollama import chat
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.terminal_utils import print_header, print_json, print_kv, print_step
 
 # In local model workflows, your application is responsible for conversation memory.
 # Here, prior turns are explicitly included so the model can answer with context.
@@ -20,6 +29,16 @@ messages = [
     {"role": "user", "content": "Give me a real classroom example."},
 ]
 
+print_header("Multi-Turn Chat History")
+print("What this demonstrates: conversation memory is represented by sending the previous turns again.")
+print_step(1, "Checking provider and model")
+print_kv("Provider", "ollama")
+print_kv("Model", "qwen3:4b")
+
+print_step(2, "Preparing conversation history")
+print_json(messages)
+
+print_step(3, "Sending full history to Ollama")
 response = chat(
     model="qwen3:4b",
     messages=messages,
@@ -27,4 +46,8 @@ response = chat(
 
 # Expected observation:
 # the output should feel like a continuation of the prior classroom-style discussion.
+print_step(4, "Assistant output received")
 print(response["message"]["content"])
+
+print_step(5, "What to observe")
+print("The model can answer the last question because the earlier RAG explanation is included in the message list.")

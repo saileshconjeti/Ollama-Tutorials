@@ -31,7 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from workflow_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 
 DEFAULT_REVIEW = (
@@ -251,11 +251,29 @@ if __name__ == "__main__":
 
     print_header("09 - CUSTOMER REVIEW ROUTING")
     print("Builds on: 04_structured_output.py, 08_prompt_chaining.py")
-    print("New concept: route one review to different LLM handlers")
+    print("What this demonstrates: a classifier chooses which specialized handler should process a message.")
+    print_step(1, "Inspecting routing graph")
+    print_ascii_tree(
+        """
+        Customer Review
+            |
+            v
+        Classifier
+            |
+            +--> Bug Handler
+            +--> Feature Handler
+            +--> Praise/General Handler
+            |
+            v
+        Final Human-Facing Answer
+        """
+    )
+    print_step(2, "Checking provider and model")
     print(f"Provider: {selected_provider} | Model: {selected_model}")
 
     app = build_graph()
     user_review = prompt_for_review()
+    print_step(3, "Running graph: classify -> chosen handler -> final")
     # Single invoke call executes classify -> chosen handler -> final.
     result = app.invoke(
         {
@@ -273,3 +291,5 @@ if __name__ == "__main__":
 
     print_subheader("FINAL HUMAN-FACING ANSWER")
     print(result["final_answer"])
+    print_step(4, "What to observe")
+    print("The route decision is structured JSON, and Python uses it to choose the next graph branch.")

@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from agent_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 DEFAULT_GOAL = (
     "Create a 7-day revision plan for machine learning basics before an internal exam."
@@ -301,11 +301,33 @@ if __name__ == "__main__":
     selected_provider, selected_model = get_selected_provider_and_model(provider)
 
     print_header("18 - PLANNER -> MULTI AGENT EXECUTOR")
+    print("What this demonstrates: a planner creates role-specific steps, then a dispatcher routes each step to the right specialist.")
+    print_step(1, "Inspecting planner-executor graph")
+    print_ascii_tree(
+        """
+        Goal
+            |
+            v
+        Planner
+            |
+            v
+        Dispatcher
+            |
+            +--> Researcher
+            +--> Designer
+            +--> Coach
+            |
+            v
+        Reviewer Final Report
+        """
+    )
+    print_step(2, "Checking provider and model")
     print(f"Provider: {selected_provider} | Model in use: {selected_model}")
     app = build_graph()
     goal = get_goal()
 
     # Student note: one `invoke` call executes all node transitions until END.
+    print_step(3, "Running graph until all plan steps are executed")
     result = app.invoke(
         {
             "goal": goal,
@@ -316,3 +338,5 @@ if __name__ == "__main__":
 
     print_subheader("FINAL REPORT")
     print(pretty_json(result["final_report"]))
+    print_step(4, "What to observe")
+    print("The dispatcher uses each plan step's role to decide which specialist node runs next.")

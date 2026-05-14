@@ -35,7 +35,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 from fastmcp.exceptions import ToolError
 
-from workflow_utils import print_header, print_subheader
+from workflow_utils import print_actionable_error, print_ascii_tree, print_header, print_step, print_subheader
 
 load_dotenv(override=True)
 
@@ -50,10 +50,28 @@ LEGACY_ZAPIER_MCP_URL = "https://mcp.zapier.com/api/v1/connect"
 def validate_zapier_mcp_config() -> None:
     """Fail fast when the Zapier MCP setup is missing or uses a stale endpoint."""
     if not ZAPIER_MCP_URL:
-        raise RuntimeError("Missing ZAPIER_MCP_URL in .env")
+        print_actionable_error(
+            "ZAPIER_MCP_URL is missing in .env.",
+            "The MCP client needs a Zapier server URL before it can create or retrieve a Notion page.",
+            [
+                "Open Zapier MCP and copy the Streamable HTTP server URL.",
+                "Add ZAPIER_MCP_URL=your_server_url to .env.",
+                "Re-run this script.",
+            ],
+        )
+        raise SystemExit(1)
     has_url_token = "token=" in ZAPIER_MCP_URL
     if not ZAPIER_MCP_API_KEY and not has_url_token:
-        raise RuntimeError("Missing ZAPIER_MCP_API_KEY in .env, or include ?token=... in ZAPIER_MCP_URL")
+        print_actionable_error(
+            "ZAPIER_MCP_API_KEY is missing.",
+            "The MCP server requires authentication before it will accept tool calls.",
+            [
+                "Add ZAPIER_MCP_API_KEY=your_key_here to .env.",
+                "Or use a ZAPIER_MCP_URL that already includes a token parameter.",
+                "Re-run this script.",
+            ],
+        )
+        raise SystemExit(1)
     if not has_url_token and ZAPIER_MCP_URL.rstrip("/") == LEGACY_ZAPIER_MCP_URL:
         raise RuntimeError(
             "ZAPIER_MCP_URL is set to Zapier's old generic connect endpoint.\n"
@@ -295,7 +313,16 @@ async def main() -> None:
     # 1) Validate configuration up front for cleaner classroom debugging.
     validate_zapier_mcp_config()
     if not NOTION_PARENT_PAGE_ID:
-        raise RuntimeError("Missing NOTION_PARENT_PAGE_ID in .env")
+        print_actionable_error(
+            "NOTION_PARENT_PAGE_ID is missing in .env.",
+            "The demo creates a new child page, so it needs to know which Notion page should be the parent.",
+            [
+                "Copy the parent Notion page URL or page ID.",
+                "Add NOTION_PARENT_PAGE_ID=your_page_id_or_url to .env.",
+                "Make sure the Zapier integration has access to that page.",
+            ],
+        )
+        raise SystemExit(1)
 
     normalized_parent_page_id = extract_notion_page_id(NOTION_PARENT_PAGE_ID)
     if not normalized_parent_page_id:
@@ -309,8 +336,27 @@ async def main() -> None:
     transport = StreamableHttpTransport(ZAPIER_MCP_URL, headers=headers)
     client = Client(transport=transport)
 
-    print_header("14 - MCP Direct Tool Call")
-    print("Pattern: create a new page through MCP, then retrieve and print its web link")
+    print_header("14 - MCP DIRECT TOOL CALL")
+    print("What this demonstrates: Python calls an external Notion tool through MCP and prints each visible tool boundary.")
+    print_step(1, "Inspecting MCP tool flow")
+    print_ascii_tree(
+        """
+        Page Title
+            |
+            v
+        MCP Client
+            |
+            v
+        Notion Create Page Tool
+            |
+            v
+        Notion Retrieve Page Tool
+            |
+            v
+        Page URL
+        """
+    )
+    print_step(2, "Checking setup and connecting to MCP")
 
     async with client:
         # 2) Inspect tool schemas first so this script can adapt to real parameter names.
@@ -319,6 +365,7 @@ async def main() -> None:
         # - generic execute_zapier_* tools + action keys
         tools = await client.list_tools()
         tool_names = get_available_tool_names(tools)
+        print(f"Discovered {len(tool_names)} MCP tools.")
 
         create_tool = find_tool_by_name(tools, "notion_create_page")
         retrieve_tool = find_tool_by_name(tools, "notion_retrieve_a_page")
@@ -513,6 +560,7 @@ async def main() -> None:
             }
 
         # 3) Preflight check: verify MCP can access the configured parent page.
+        print_step(3, "Preflight: verify parent page access")
         print_subheader("Preflight - Verify Parent Page Access")
         print(f"Tool: {retrieve_tool_name}")
         print("Arguments:")
@@ -525,6 +573,7 @@ async def main() -> None:
             payload = parse_tool_error(exc)
             raise RuntimeError(format_notion_access_hint(normalized_parent_page_id, payload)) from exc
 
+        print_step(4, "Calling MCP tool to create page")
         print_subheader("VISIBLE TOOL CALL - Create Page")
         print(f"Tool: {create_tool_name}")
         print("Arguments:")
@@ -576,6 +625,7 @@ async def main() -> None:
             page_url = find_first_value(parsed_create, ("page_url", "url", "public_url"))
 
         # 4) If create result has no URL, retrieve the page by ID as a second step.
+        print_step(5, "Resolving page URL")
         if not page_url and page_id:
             if "params" in retrieve_args:
                 retrieve_args = {**retrieve_args, "params": {**retrieve_args["params"], retrieve_page_key: page_id}}
@@ -611,6 +661,8 @@ async def main() -> None:
                 "The page may still have been created successfully, but the returned payload "
                 "did not include a URL. Check the raw tool result above."
             )
+        print_step(6, "What to observe")
+        print("MCP tool calls are ordinary structured requests from Python; the external app performs the actual Notion action.")
 
 
 if __name__ == "__main__":

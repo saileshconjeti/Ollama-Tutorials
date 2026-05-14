@@ -23,7 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from agent_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 DEFAULT_TASK = "Find two key exam reminders from local notes and also compute 18 + 27."
 # Guardrail so the agent cannot loop forever.
@@ -164,7 +164,31 @@ if __name__ == "__main__":
     selected_provider, selected_model = get_selected_provider_and_model(provider)
 
     print_header("16 - REACT AGENT LOOP")
+    print("What this demonstrates: the model chooses one action per loop, while Python executes tools and records observations.")
+    print_step(1, "Inspecting agent loop")
+    print_ascii_tree(
+        """
+        Goal
+            |
+            v
+        LLM Decision
+            |
+            +--> search_notes tool
+            +--> math_add tool
+            +--> finish
+            |
+            v
+        Observation added to trajectory
+            |
+            v
+        Next loop iteration
+        """
+    )
+    print_step(2, "Checking provider and available tools")
     print(f"Provider: {selected_provider} | Model in use: {selected_model}")
+    print("- search_notes: search local course notes")
+    print("- math_add: add two numbers")
+    print("- finish: stop the loop with a final answer")
     task = get_task()
 
     # Student note: "trajectory" is short-term memory for this single run.
@@ -176,7 +200,7 @@ if __name__ == "__main__":
 
     # ReAct loop: decide -> act -> observe -> repeat.
     for step_index in range(1, MAX_STEPS + 1):
-        print_subheader(f"STEP {step_index} STREAM")
+        print_step(step_index + 2, f"Loop iteration {step_index}")
         stream_event(step_index, "status", "Preparing context for the model")
         stream_event(
             step_index,

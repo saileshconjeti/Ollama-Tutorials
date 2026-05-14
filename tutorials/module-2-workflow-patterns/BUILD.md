@@ -63,6 +63,8 @@ source .venv/bin/activate
 
 Run from repository root.
 
+The scripts now include narrated terminal walkthroughs with ASCII workflow diagrams, visible intermediate JSON state, tool selections, MCP tool calls/results, provider/model labels, and improved setup errors for missing keys, Ollama, Groq, or MCP configuration.
+
 ```bash
 python tutorials/module-2-workflow-patterns/08_prompt_chaining.py
 python tutorials/module-2-workflow-patterns/09_routing.py

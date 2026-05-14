@@ -32,7 +32,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from workflow_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 
 DEFAULT_TOPIC = (
@@ -311,7 +311,24 @@ if __name__ == "__main__":
 
     print_header("10 - ORCHESTRATOR / WORKER")
     print("Builds on: 08_prompt_chaining.py, 09_routing.py")
-    print("New concept: a controller delegates work to specialized workers")
+    print("What this demonstrates: a controller delegates one task to specialized workers, then merges their results.")
+    print_step(1, "Inspecting orchestrator-worker graph")
+    print_ascii_tree(
+        """
+        Student Scenario
+            |
+            v
+        Orchestrator
+            |
+            +--> Study Strategy Worker
+            +--> Schedule Worker
+            +--> Wellbeing Worker
+            |
+            v
+        Final Synthesis
+        """
+    )
+    print_step(2, "Checking runtime settings")
     print(
         f"LLM orchestrator: {'ON' if USE_LLM_ORCHESTRATOR else 'OFF'} | "
         f"worker model (ollama defaults): {WORKER_MODEL} | "
@@ -321,6 +338,7 @@ if __name__ == "__main__":
 
     app = build_graph()
     topic = prompt_for_topic()
+    print_step(3, "Running graph: plan -> workers -> synthesis")
     result = app.invoke({"topic": topic, "provider": selected_provider, "active_model": selected_model})
 
     print_subheader("WORK PLAN")
@@ -332,3 +350,5 @@ if __name__ == "__main__":
 
     print_subheader("FINAL SYNTHESIS")
     print(pretty_json(result["final_synthesis"]))
+    print_step(4, "What to observe")
+    print("Workers receive narrow assignments, and the final node combines their structured outputs.")

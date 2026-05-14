@@ -15,13 +15,29 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import textwrap
+from pathlib import Path
 from typing import Any, Type, TypeVar
 
 from dotenv import load_dotenv
 from groq import BadRequestError, Groq
 from ollama import chat as ollama_chat
 from pydantic import BaseModel, ValidationError
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.terminal_utils import (
+    print_actionable_error,
+    print_ascii_tree,
+    print_header,
+    print_json,
+    print_prompt_preview,
+    print_step,
+    print_substep,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -32,18 +48,9 @@ DEFAULT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "qwen3:4b")
 DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
-def print_header(title: str) -> None:
-    """Print a simple section header for terminal demos."""
-    print("\n" + "=" * 90)
-    print(title)
-    print("=" * 90)
-
-
 def print_subheader(title: str) -> None:
     """Print a smaller section header."""
-    print("\n" + "-" * 90)
-    print(title)
-    print("-" * 90)
+    print_substep(title)
 
 
 def pretty_json(data: Any) -> str:
@@ -105,20 +112,53 @@ def _call_text(
     if provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
         if not api_key:
-            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+            print_actionable_error(
+                "GROQ_API_KEY was not found.",
+                "This workflow is using Groq as the cloud LLM provider.",
+                [
+                    "Create a .env file in the project root.",
+                    "Add GROQ_API_KEY=your_key_here.",
+                    "Re-run with --provider groq, or use --provider ollama for local inference.",
+                ],
+            )
+            raise SystemExit(1)
         client = Groq(api_key=api_key)
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.2,
-        )
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+            )
+        except Exception as exc:
+            print_actionable_error(
+                "Groq request failed.",
+                "The workflow sent a prompt to Groq, but the API request did not complete successfully.",
+                [
+                    "Check your internet connection and GROQ_API_KEY.",
+                    "Check whether the selected model is available.",
+                    f"Original error: {exc}",
+                ],
+            )
+            raise SystemExit(1) from exc
         return response.choices[0].message.content or ""
 
-    response = ollama_chat(
-        model=model,
-        messages=messages,
-        options={"temperature": 0.2},
-    )
+    try:
+        response = ollama_chat(
+            model=model,
+            messages=messages,
+            options={"temperature": 0.2},
+        )
+    except Exception as exc:
+        print_actionable_error(
+            "Ollama request failed.",
+            "This workflow uses a local Ollama model, so the server and model must be available before the graph can continue.",
+            [
+                "Run ollama serve in another terminal.",
+                f"Pull the model with: ollama pull {model}",
+                f"Original error: {exc}",
+            ],
+        )
+        raise SystemExit(1) from exc
     return response["message"]["content"]
 
 
@@ -132,7 +172,16 @@ def _call_structured(
     if provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
         if not api_key:
-            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+            print_actionable_error(
+                "GROQ_API_KEY was not found.",
+                "This workflow is asking Groq for structured JSON output.",
+                [
+                    "Create a .env file in the project root.",
+                    "Add GROQ_API_KEY=your_key_here.",
+                    "Re-run with --provider groq, or use --provider ollama.",
+                ],
+            )
+            raise SystemExit(1)
         client = Groq(api_key=api_key)
         schema_instruction = {
             "role": "system",
@@ -160,14 +209,35 @@ def _call_structured(
                     failed_generation = error_obj.get("failed_generation")
                     if isinstance(failed_generation, str) and failed_generation.strip():
                         return failed_generation
-            raise
+            print_actionable_error(
+                "Groq structured-output request failed.",
+                "The model call failed before Python could validate the JSON result.",
+                [
+                    "Check your internet connection and GROQ_API_KEY.",
+                    "If the model rejected strict JSON, try a different GROQ_MODEL.",
+                    f"Original error: {exc}",
+                ],
+            )
+            raise SystemExit(1) from exc
 
-    response = ollama_chat(
-        model=model,
-        messages=messages,
-        format=schema_dict,
-        options={"temperature": 0},
-    )
+    try:
+        response = ollama_chat(
+            model=model,
+            messages=messages,
+            format=schema_dict,
+            options={"temperature": 0},
+        )
+    except Exception as exc:
+        print_actionable_error(
+            "Ollama structured-output request failed.",
+            "The workflow needs a local structured JSON response before it can validate and route state.",
+            [
+                "Run ollama serve in another terminal.",
+                f"Pull the model with: ollama pull {model}",
+                f"Original error: {exc}",
+            ],
+        )
+        raise SystemExit(1) from exc
     return response["message"]["content"]
 
 

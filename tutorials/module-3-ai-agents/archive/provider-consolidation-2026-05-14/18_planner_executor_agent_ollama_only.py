@@ -10,24 +10,16 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import List, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from tutorials.llm_client import build_provider_parser
-from agent_utils import ask_ollama_structured, get_selected_provider_and_model, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
+from agent_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 DEFAULT_GOAL = (
     "Create a 7-day revision plan for machine learning basics before an internal exam."
 )
-GROQ_PLANNER_EXECUTOR_MODEL = "llama-3.3-70b-versatile"
 
 AgentRole = Literal["researcher", "designer", "coach"]
 
@@ -79,8 +71,6 @@ class AgentState(TypedDict, total=False):
     active_step_role: AgentRole
 
     final_report: dict
-    provider: str
-    model: str
 
 
 def planner_node(state: AgentState) -> AgentState:
@@ -98,9 +88,6 @@ Rules:
 - Steps must be ordered and build on prior outputs.
 """,
         schema_model=Plan,
-        model=state["model"],
-        provider=state["provider"],
-        unwrap_key="plan",
     )
 
     plan_dict = plan.model_dump()
@@ -167,15 +154,8 @@ Assigned role: {role}
 
 Completed step outputs so far:
 {state['step_outputs']}
-
-Return only the current step execution object with these top-level fields:
-step_summary, key_points, concrete_actions, handoff_notes, status.
-Do not include step_number, step_title, objective, role, or an execution wrapper.
 """,
         schema_model=StepExecution,
-        model=state["model"],
-        provider=state["provider"],
-        unwrap_key="execution",
     )
 
     output = {
@@ -251,9 +231,6 @@ Specialist outputs in sequence:
 {state['step_outputs']}
 """,
         schema_model=FinalReport,
-        model=state["model"],
-        provider=state["provider"],
-        unwrap_key="final_report",
     )
     return {"final_report": report.model_dump()}
 
@@ -303,13 +280,6 @@ def get_goal() -> str:
 
 
 if __name__ == "__main__":
-    parser = build_provider_parser("Run planner-executor graph with Ollama or Groq.")
-    args = parser.parse_args()
-    provider = args.provider
-    selected_provider, selected_model = get_selected_provider_and_model(provider)
-    if selected_provider == "groq":
-        selected_model = GROQ_PLANNER_EXECUTOR_MODEL
-
     print_header("18 - PLANNER -> MULTI AGENT EXECUTOR")
     print("What this demonstrates: a planner creates role-specific steps, then a dispatcher routes each step to the right specialist.")
     print_step(1, "Inspecting planner-executor graph")
@@ -331,22 +301,14 @@ if __name__ == "__main__":
         Reviewer Final Report
         """
     )
-    print_step(2, "Checking provider and model")
-    print(f"Provider: {selected_provider} | Model in use: {selected_model}")
     app = build_graph()
     goal = get_goal()
 
     # Student note: one `invoke` call executes all node transitions until END.
-    print_step(3, "Running graph until all plan steps are executed")
-    result = app.invoke(
-        {
-            "goal": goal,
-            "provider": selected_provider,
-            "model": selected_model,
-        }
-    )
+    print_step(2, "Running graph until all plan steps are executed")
+    result = app.invoke({"goal": goal})
 
     print_subheader("FINAL REPORT")
     print(pretty_json(result["final_report"]))
-    print_step(4, "What to observe")
+    print_step(3, "What to observe")
     print("The dispatcher uses each plan step's role to decide which specialist node runs next.")

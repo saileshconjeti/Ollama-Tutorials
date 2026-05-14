@@ -2,11 +2,17 @@
 # Purpose: Test whether a pairwise LLM judge is sensitive to answer order.
 # How to run: python 03_bias_mitigation_position_swapping.py
 
-import json
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from utils.groq_client import call_groq_llm, get_selected_groq_model
 from utils.json_utils import extract_json
 from utils.prompts import PAIRWISE_EVALUATION_PROMPT
+from tutorials.terminal_utils import print_ascii_tree, print_header, print_json, print_kv, print_prompt_preview, print_step
 
 
 question = "What is the role of guardrails in AI agent systems?"
@@ -23,7 +29,7 @@ Guardrails are basically prompts that make the AI behave nicely. They are useful
 """
 
 
-def run_pairwise_judge(response_a: str, response_b: str) -> dict:
+def run_pairwise_judge(response_a: str, response_b: str) -> tuple[str, dict]:
     """Run one pairwise comparison and return the parsed judge result."""
     # The prompt only knows labels A and B. Later we map those labels back to
     # candidate_1 and candidate_2 so swapped order is still comparable.
@@ -33,7 +39,7 @@ def run_pairwise_judge(response_a: str, response_b: str) -> dict:
         response_b=response_b,
     )
     raw_result = call_groq_llm(prompt, temperature=0.0)
-    return extract_json(raw_result)
+    return raw_result, extract_json(raw_result)
 
 
 def map_winner_to_candidate(judge_result: dict, candidate_for_a: str, candidate_for_b: str) -> str:
@@ -52,18 +58,52 @@ def map_winner_to_candidate(judge_result: dict, candidate_for_a: str, candidate_
 
 
 def main():
-    print("\n=== Module 4 - AI Evals: LLM-as-a-Judge ===")
-    print(f"Provider: groq | Model: {get_selected_groq_model()}")
-    print("\n=== 03 - Position Bias Test with Answer Swapping ===")
-    print("\nQuestion:")
-    print(question)
+    print_header("Bias Check with Position Swapping")
+    print("What this demonstrates: pairwise judges can be sensitive to answer order, so we swap A/B labels and compare.")
+
+    print_step(1, "Checking provider and model")
+    print_kv("Evaluation type", "bias check")
+    print_kv("Provider", "groq")
+    print_kv("Judge model", get_selected_groq_model())
+
+    print_step(2, "Inspecting bias-check flow")
+    print_ascii_tree(
+        """
+        Candidate 1 as A, Candidate 2 as B
+            |
+            v
+        Judge Result 1
+
+        Candidate 2 as A, Candidate 1 as B
+            |
+            v
+        Judge Result 2
+            |
+            v
+        Compare Mapped Winners
+        """
+    )
+
+    print_step(3, "Reviewing question and candidates")
+    print_kv("User question", question)
     print("\nCandidate 1:")
     print(candidate_1.strip())
     print("\nCandidate 2:")
     print(candidate_2.strip())
 
     # Run 1: stronger answer first, weaker answer second.
-    original_order_result = run_pairwise_judge(candidate_1, candidate_2)
+    original_prompt = PAIRWISE_EVALUATION_PROMPT.format(
+        question=question,
+        response_a=candidate_1,
+        response_b=candidate_2,
+    )
+    print_step(4, "Running original order: candidate_1 as A, candidate_2 as B")
+    print_prompt_preview(original_prompt, max_chars=700)
+    original_raw_result, original_order_result = run_pairwise_judge(candidate_1, candidate_2)
+    print("Raw judge response:")
+    print(original_raw_result)
+    print("\nParsed JSON:")
+    print_json(original_order_result)
     original_order_winner = map_winner_to_candidate(
         original_order_result,
         candidate_for_a="candidate_1",
@@ -73,22 +113,29 @@ def main():
     # Run 2: swap the answer positions, then map the winner back.
     # If the judge still chooses candidate_1, the result is less likely to be
     # caused by simply preferring the first or second position.
-    swapped_order_result = run_pairwise_judge(candidate_2, candidate_1)
+    swapped_prompt = PAIRWISE_EVALUATION_PROMPT.format(
+        question=question,
+        response_a=candidate_2,
+        response_b=candidate_1,
+    )
+    print_step(5, "Running swapped order: candidate_2 as A, candidate_1 as B")
+    print_prompt_preview(swapped_prompt, max_chars=700)
+    swapped_raw_result, swapped_order_result = run_pairwise_judge(candidate_2, candidate_1)
+    print("Raw judge response:")
+    print(swapped_raw_result)
+    print("\nParsed JSON:")
+    print_json(swapped_order_result)
     swapped_order_winner = map_winner_to_candidate(
         swapped_order_result,
         candidate_for_a="candidate_2",
         candidate_for_b="candidate_1",
     )
 
-    print("\nOriginal order judgment: candidate_1 as A, candidate_2 as B")
-    print(json.dumps(original_order_result, indent=2))
+    print_step(6, "Mapping A/B winners back to stable candidate names")
     print(f"Mapped winner: {original_order_winner}")
-
-    print("\nSwapped order judgment: candidate_2 as A, candidate_1 as B")
-    print(json.dumps(swapped_order_result, indent=2))
     print(f"Mapped winner: {swapped_order_winner}")
 
-    print("\nFinal interpretation:")
+    print_step(7, "Final interpretation")
     # Stable result: the same candidate wins even after swapping answer order.
     if original_order_winner == swapped_order_winner and original_order_winner != "unknown":
         print(

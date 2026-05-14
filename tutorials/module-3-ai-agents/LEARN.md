@@ -8,12 +8,14 @@ By the end of this module, students should be able to:
 
 - distinguish deterministic workflows from autonomous agent loops
 - explain provider-aware agent execution (local Ollama vs cloud Groq) using the same application control flow
+- run the same agent scripts with either `.env` provider selection or a one-off `--provider` flag
 - trace a ReAct cycle using structured state: thought, action, observation
 - explain why tool execution should remain in application code
 - distinguish short-term trajectory memory from persistent user memory
 - describe when planner-executor beats single-agent prompting
 - explain how supervisor-driven multi-agent delegation improves coverage
 - inspect typed graph state and reason about transitions node by node
+- connect terminal artifacts to code paths: headers, ASCII diagrams, step logs, JSON snapshots, and final reports
 
 ## Core Mental Model
 
@@ -31,6 +33,8 @@ The progression is intentional:
 - then add role-based orchestration
 - then add parallel delegation and synthesis
 
+Provider selection is intentionally orthogonal to the agent pattern. The same Python loop or graph runs whether the model backend is local Ollama or Groq; only model invocation changes.
+
 ## Concept Breakdown
 
 ## 1) ReAct Agent Loop (`16_react_agent_loop.py`)
@@ -41,6 +45,8 @@ What to learn:
 - each iteration follows: decide -> act -> observe -> append trajectory
 - trajectory is short-term working memory for the next decision
 - loop termination is explicit (`finish`) and bounded (`MAX_STEPS`)
+- a guardrail blocks `finish` until at least one tool observation exists
+- printed event lines make context building, model calls, tool dispatch, and memory updates visible
 
 Why this pattern matters:
 
@@ -56,6 +62,7 @@ What to learn:
 - memory is persisted in JSON to survive process restarts
 - updates are merged with deduplication and size limits
 - reply includes `used_memory_items` for explainability
+- the readable memory context helps students see exactly what is passed back into the answer prompt
 
 Why this pattern matters:
 
@@ -72,6 +79,7 @@ What to learn:
 - router sends control to specialist role nodes
 - specialists append outputs and advance `step_index`
 - reviewer synthesizes all outputs into final report
+- provider-specific JSON quirks are handled in `agent_utils.py` with validation, retries, and optional wrapper-key unwrapping
 
 Why this pattern matters:
 
@@ -87,6 +95,7 @@ What to learn:
 - workers execute in parallel branches
 - shared outputs merge using `Annotated[..., operator.add]`
 - supervisor composes one strategic answer from all workers
+- branch output order can vary because workers are independent contributors
 
 Why this pattern matters:
 
@@ -101,6 +110,18 @@ Why this pattern matters:
 - bounded loops prevent runaway agent behavior
 - persisted memory is auditable and resettable
 - graph state makes control flow debuggable in class
+- provider selection happens at the boundary, not inside the agent logic
+- setup failures should be actionable: missing API keys, unavailable Ollama models, and failed requests now print concrete next steps
+
+## Provider Consolidation
+
+Earlier versions had separate Groq files for Module 3. The finished tutorials use one file per pattern:
+
+- default provider comes from `LLM_PROVIDER` in `.env`
+- `--provider ollama` and `--provider groq` override `.env` for one run
+- old split-provider files live in `archive/provider-consolidation-2026-05-14/`
+
+This is an important design lesson: keep application control flow stable and swap providers through a narrow integration layer.
 
 ## Suggested Classroom Discussion Questions
 
@@ -113,12 +134,11 @@ Why this pattern matters:
 ## Files Covered
 
 - `16_react_agent_loop.py`
-- `16_react_agent_loop_groq.py`
 - `17_memory_agent.py`
-- `17_memory_agent_groq.py`
 - `18_planner_executor_agent.py`
-- `18_planner_executor_agent_groq.py`
 - `19_multi_agent_supervisor.py`
-- `19_multi_agent_supervisor_groq.py`
 - `agent_utils.py`
+- `../terminal_utils.py`
 - `data/agent_memory.json` (generated at runtime)
+
+Historical split-provider versions are archived under `archive/provider-consolidation-2026-05-14/`.

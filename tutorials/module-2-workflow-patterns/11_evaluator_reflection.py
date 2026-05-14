@@ -31,7 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from workflow_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 
 DEFAULT_TASK = "Write a short executive update about a Generative and Agentic AI class project."
@@ -252,7 +252,25 @@ if __name__ == "__main__":
 
     print_header("11 - EVALUATOR / CRITIQUE / REFLECTION")
     print("Builds on: 08_prompt_chaining.py, 09_routing.py, 10_orchestrator_worker.py")
-    print("New concept: quality control with explicit critique and revision")
+    print("What this demonstrates: a workflow can critique its own draft and loop until quality is acceptable.")
+    print_step(1, "Inspecting reflection loop")
+    print_ascii_tree(
+        """
+        Writing Task
+            |
+            v
+        Draft
+            |
+            v
+        Critique
+            |
+            +--> Revise -> Critique again
+            |
+            v
+        Final Output
+        """
+    )
+    print_step(2, "Checking runtime settings")
     print(
         f"writer model: {active_writer_model} | critique model: {active_critique_model} | "
         f"min loops: {MIN_REVISIONS} | max loops: {MAX_REVISIONS} | "
@@ -262,6 +280,7 @@ if __name__ == "__main__":
 
     app = build_graph()
     task = prompt_for_task()
+    print_step(3, "Running graph with critique/revision control point")
     result = app.invoke(
         {
             "task": task,
@@ -287,3 +306,5 @@ if __name__ == "__main__":
 
     print_subheader("FINAL OUTPUT")
     print(pretty_json(result["final_output"]))
+    print_step(4, "What to observe")
+    print("The conditional edge decides whether to revise again or stop, using structured critique fields.")

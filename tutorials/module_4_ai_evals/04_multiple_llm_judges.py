@@ -2,12 +2,18 @@
 # Purpose: Run the same reference-based evaluation through multiple Groq models.
 # How to run: python 04_multiple_llm_judges.py
 
-import json
+import sys
+from pathlib import Path
 from statistics import mean
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from utils.groq_client import call_groq_llm
 from utils.json_utils import extract_json
 from utils.prompts import EVALUATION_PROMPT
+from tutorials.terminal_utils import print_ascii_tree, print_header, print_json, print_kv, print_prompt_preview, print_step
 
 
 # A small ensemble of Groq-hosted judge models.
@@ -45,7 +51,7 @@ def score_as_number(result: dict, field: str) -> float:
         raise ValueError(f"Judge result is missing a numeric '{field}' score: {result}") from error
 
 
-def run_judge(model: str, prompt: str) -> dict:
+def run_judge(model: str, prompt: str) -> tuple[str, dict]:
     """Run one judge model and attach the model name to its parsed result."""
     # Tutorial 04 overrides the model for each call instead of relying only on
     # GROQ_MODEL from .env.
@@ -54,7 +60,7 @@ def run_judge(model: str, prompt: str) -> dict:
 
     # Store the model name next to the result so the printed output is traceable.
     parsed_result["judge_model"] = model
-    return parsed_result
+    return raw_result, parsed_result
 
 
 def average_scores(results: list[dict]) -> dict:
@@ -105,38 +111,70 @@ def main():
         reference=reference_answer,
     )
 
-    print("\n=== Module 4 - AI Evals: LLM-as-a-Judge ===")
-    print("Provider: groq | Models:")
+    print_header("Multiple LLM Judges")
+    print("What this demonstrates: the same rubric can be judged by several models and then aggregated.")
+
+    print_step(1, "Checking provider and judge ensemble")
+    print_kv("Evaluation type", "multi-judge reference-based")
+    print_kv("Provider", "groq")
+    print("Judge models:")
     for model in JUDGE_MODELS:
         print(f"- {model}")
-    print("\n=== 04 - Multiple LLM Judges for Reference-Based Evaluation ===")
-    print("\nQuestion:")
-    print(question)
+
+    print_step(2, "Inspecting multi-judge flow")
+    print_ascii_tree(
+        """
+        Shared Question + Assistant Answer + Reference Answer
+            |
+            v
+        Same Evaluation Prompt
+            |
+            +--> Judge Model 1 --> JSON scores
+            +--> Judge Model 2 --> JSON scores
+            +--> Judge Model 3 --> JSON scores
+            |
+            v
+        Average Scores + Majority Vote
+        """
+    )
+
+    print_step(3, "Reviewing inputs and rubric")
+    print_kv("User question", question)
     print("\nAssistant response:")
     print(assistant_response.strip())
     print("\nReference answer:")
     print(reference_answer.strip())
+    print("\nRubric: accuracy, relevance, completeness, each scored from 1 to 5.")
+    print_prompt_preview(prompt, max_chars=900)
 
     results = []
-    for model in JUDGE_MODELS:
-        print(f"\nRunning judge model: {model}")
+    for index, model in enumerate(JUDGE_MODELS, start=4):
+        print_step(index, f"Running judge model: {model}")
 
         # Run the same evaluation prompt through each model in the ensemble.
-        result = run_judge(model, prompt)
+        raw_result, result = run_judge(model, prompt)
         results.append(result)
-        print(json.dumps(result, indent=2))
+        print("Raw judge response:")
+        print(raw_result)
+        print("\nParsed JSON:")
+        print_json(result)
 
-    print("\n=== Aggregated Judge Result ===")
-    print("\nAverage scores:")
+    print_step(7, "Aggregating judge results")
+    print("Average scores:")
 
     # Average scores are useful when you want a continuous measurement.
-    print(json.dumps(average_scores(results), indent=2))
+    averages = average_scores(results)
+    print_json(averages)
     print("\nMajority decision:")
 
     # Majority voting is useful when you want a simple pass/fail style decision.
-    print(json.dumps(majority_pass(results), indent=2))
+    decision = majority_pass(results)
+    print_json(decision)
 
-    print("\nTeaching note:")
+    print_step(8, "Final interpretation")
+    print(f"Overall average: {averages['overall']}/5")
+    print(f"Majority decision: {decision['majority_decision']}")
+    print()
     print(
         "Using multiple judge models can reduce the risk that one model's style "
         "preferences dominate the evaluation. In production, this should still "

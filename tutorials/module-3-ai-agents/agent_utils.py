@@ -9,13 +9,27 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import textwrap
+from pathlib import Path
 from typing import Any, Type, TypeVar
 
 from dotenv import load_dotenv
 from groq import BadRequestError, Groq
 from ollama import chat as ollama_chat
 from pydantic import BaseModel, ValidationError
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.terminal_utils import (
+    print_actionable_error,
+    print_ascii_tree,
+    print_header,
+    print_step,
+    print_substep,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -26,16 +40,8 @@ DEFAULT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:0.5b")
 DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
-def print_header(title: str) -> None:
-    print("\n" + "=" * 90)
-    print(title)
-    print("=" * 90)
-
-
 def print_subheader(title: str) -> None:
-    print("\n" + "-" * 90)
-    print(title)
-    print("-" * 90)
+    print_substep(title)
 
 
 def pretty_json(data: Any) -> str:
@@ -62,6 +68,27 @@ def extract_json_block(text: str) -> str:
     raise ValueError("Could not find a JSON block in model output.")
 
 
+def _validate_structured_payload(
+    raw_text: str,
+    schema_model: Type[T],
+    unwrap_key: str | None = None,
+) -> T:
+    try:
+        return schema_model.model_validate_json(raw_text)
+    except ValidationError:
+        if unwrap_key is None:
+            raise
+
+        payload = json.loads(raw_text)
+        if not isinstance(payload, dict) or unwrap_key not in payload:
+            raise
+
+        nested_payload = payload[unwrap_key]
+        if isinstance(nested_payload, str):
+            return schema_model.model_validate_json(nested_payload)
+        return schema_model.model_validate(nested_payload)
+
+
 def _looks_like_ollama_model(model: str) -> bool:
     return ":" in model
 
@@ -79,6 +106,12 @@ def _resolve_model_for_provider(provider: str, model: str) -> str:
     return model
 
 
+def get_selected_provider_and_model(provider: str | None = None) -> tuple[str, str]:
+    selected_provider = _resolve_provider(provider)
+    selected_model = DEFAULT_GROQ_MODEL if selected_provider == "groq" else DEFAULT_MODEL
+    return selected_provider, selected_model
+
+
 def _call_text(
     *,
     messages: list[dict[str, str]],
@@ -88,20 +121,53 @@ def _call_text(
     if provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
         if not api_key:
-            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+            print_actionable_error(
+                "GROQ_API_KEY was not found.",
+                "This agent tutorial is configured to use Groq as the cloud LLM provider.",
+                [
+                    "Create a .env file in the project root.",
+                    "Add GROQ_API_KEY=your_key_here.",
+                    "Re-run with --provider groq, or use the local Ollama version.",
+                ],
+            )
+            raise SystemExit(1)
         client = Groq(api_key=api_key)
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.2,
-        )
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+            )
+        except Exception as exc:
+            print_actionable_error(
+                "Groq request failed.",
+                "The agent sent a prompt to Groq, but the API request did not complete successfully.",
+                [
+                    "Check your internet connection and GROQ_API_KEY.",
+                    "Check whether the selected model is available.",
+                    f"Original error: {exc}",
+                ],
+            )
+            raise SystemExit(1) from exc
         return response.choices[0].message.content or ""
 
-    response = ollama_chat(
-        model=model,
-        messages=messages,
-        options={"temperature": 0.2},
-    )
+    try:
+        response = ollama_chat(
+            model=model,
+            messages=messages,
+            options={"temperature": 0.2},
+        )
+    except Exception as exc:
+        print_actionable_error(
+            "Ollama request failed.",
+            "This agent needs a local model response before it can continue its loop or graph.",
+            [
+                "Run ollama serve in another terminal.",
+                f"Pull the model with: ollama pull {model}",
+                f"Original error: {exc}",
+            ],
+        )
+        raise SystemExit(1) from exc
     return response["message"]["content"]
 
 
@@ -115,7 +181,16 @@ def _call_structured(
     if provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
         if not api_key:
-            raise RuntimeError("Missing GROQ_API_KEY for Groq provider.")
+            print_actionable_error(
+                "GROQ_API_KEY was not found.",
+                "This agent is asking Groq for structured JSON decisions.",
+                [
+                    "Create a .env file in the project root.",
+                    "Add GROQ_API_KEY=your_key_here.",
+                    "Re-run with --provider groq, or use the local Ollama version.",
+                ],
+            )
+            raise SystemExit(1)
         client = Groq(api_key=api_key)
         schema_instruction = {
             "role": "system",
@@ -140,14 +215,35 @@ def _call_structured(
                     failed_generation = error_obj.get("failed_generation")
                     if isinstance(failed_generation, str) and failed_generation.strip():
                         return failed_generation
-            raise
+            print_actionable_error(
+                "Groq structured-output request failed.",
+                "The agent could not get a valid structured decision from the cloud model.",
+                [
+                    "Check your internet connection and GROQ_API_KEY.",
+                    "Try a different GROQ_MODEL if strict JSON keeps failing.",
+                    f"Original error: {exc}",
+                ],
+            )
+            raise SystemExit(1) from exc
 
-    response = ollama_chat(
-        model=model,
-        messages=messages,
-        format=schema_dict,
-        options={"temperature": 0},
-    )
+    try:
+        response = ollama_chat(
+            model=model,
+            messages=messages,
+            format=schema_dict,
+            options={"temperature": 0},
+        )
+    except Exception as exc:
+        print_actionable_error(
+            "Ollama structured-output request failed.",
+            "The agent needs structured JSON from the local model before it can select actions safely.",
+            [
+                "Run ollama serve in another terminal.",
+                f"Pull the model with: ollama pull {model}",
+                f"Original error: {exc}",
+            ],
+        )
+        raise SystemExit(1) from exc
     return response["message"]["content"]
 
 
@@ -176,6 +272,7 @@ def ask_ollama_structured(
     model: str = DEFAULT_MODEL,
     provider: str | None = None,
     max_retries: int = 2,
+    unwrap_key: str | None = None,
 ) -> T:
     schema_dict = schema_model.model_json_schema()
     selected_provider = _resolve_provider(provider)
@@ -206,12 +303,20 @@ def ask_ollama_structured(
         )
 
         try:
-            return schema_model.model_validate_json(raw_text)
-        except ValidationError as exc:
+            return _validate_structured_payload(
+                raw_text,
+                schema_model,
+                unwrap_key=unwrap_key,
+            )
+        except (ValidationError, json.JSONDecodeError) as exc:
             last_error = exc
             try:
                 repaired = extract_json_block(raw_text)
-                return schema_model.model_validate_json(repaired)
+                return _validate_structured_payload(
+                    repaired,
+                    schema_model,
+                    unwrap_key=unwrap_key,
+                )
             except Exception as inner_exc:
                 last_error = inner_exc
                 prompt = textwrap.dedent(

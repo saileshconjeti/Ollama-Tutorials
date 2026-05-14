@@ -13,6 +13,8 @@ Run and explain four AI evaluation patterns in sequence:
 
 Each script is intentionally small and verbose so students can trace how the prompt, model call, JSON parsing, and printed interpretation fit together.
 
+Terminal output now shows evaluation type, provider/model, user question, candidate/reference answers, rubric, judge prompt preview, raw judge response, parsed JSON, and a plain-English interpretation. Setup and JSON parsing errors include actionable classroom debugging steps.
+
 ## Prerequisites
 
 - Python virtual environment is active

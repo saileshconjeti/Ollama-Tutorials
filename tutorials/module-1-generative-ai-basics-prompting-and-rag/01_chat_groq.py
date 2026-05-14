@@ -19,21 +19,35 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import chat, get_selected_provider_and_model, parse_provider_from_cli
+from tutorials.terminal_utils import print_header, print_json, print_kv, print_step
 
 
 provider = parse_provider_from_cli("Run a minimal chat example with Ollama or Groq.")
 selected_provider, selected_model = get_selected_provider_and_model(provider)
-print(f"Provider: {selected_provider} | Model: {selected_model}")
+print_header("Minimal Chat Call with Provider Switching")
+print("What this demonstrates: the same message list can be sent to Ollama locally or Groq in the cloud.")
+print_step(1, "Checking provider and model")
+print_kv("Provider", selected_provider)
+print_kv("Model", selected_model)
 
 # This script demonstrates app usage of a switchable model provider:
 # your Python code sends messages and receives assistant text from Ollama (default) or Groq.
+messages = [
+    {"role": "system", "content": "You are a concise university teaching assistant for the course Generative and Agentic AI."},
+    {"role": "user", "content": "Explain Retrieval Augmented Generation in 120 words."},
+]
+print_step(2, "Preparing messages")
+print_json(messages)
+
+print_step(3, f"Sending request to {selected_provider}")
 response = chat(
-    messages=[
-        {"role": "system", "content": "You are a concise university teaching assistant for the course Generative and Agentic AI."},
-        {"role": "user", "content": "Explain Retrieval Augmented Generation in 120 words."},
-    ],
+    messages=messages,
     temperature=0.2,
     provider=provider,
 )
 
+print_step(4, "Assistant output received")
 print(response)
+
+print_step(5, "What to observe")
+print("Changing --provider changes the backend, while the prompt and Python control flow stay the same.")

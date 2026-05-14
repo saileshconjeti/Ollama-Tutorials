@@ -28,7 +28,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, print_header, print_subheader
+from workflow_utils import ask_ollama_structured, print_ascii_tree, print_header, print_prompt_preview, print_step, print_subheader
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -182,18 +182,47 @@ if __name__ == "__main__":
     print_header("08 - PROMPT CHAINING")
     print("Builds on: 01_chat.py, 04_structured_output.py")
     print("Scenario: Meeting minutes summarizer + action planner")
+    print("What this demonstrates: output from one LLM step becomes validated input to the next step.")
+    print_step(1, "Inspecting chain flow")
+    print_ascii_tree(
+        """
+        Raw Meeting Notes
+            |
+            v
+        Step 1: MeaningfulMinutes JSON
+            |
+            v
+        Step 2: MeetingActionPlan JSON
+            |
+            v
+        Markdown Report
+        """
+    )
+    print_step(2, "Checking provider and input/output modes")
+    print(f"Provider: {selected_provider} | Model: {selected_model}")
     print("Input mode: text file only")
     print("Output mode: markdown file")
-    print(f"Provider: {selected_provider} | Model: {selected_model}")
 
     raw_minutes = build_minutes_input(cli_file=args.file)
+    print_step(3, "Loaded raw meeting notes")
+    print_prompt_preview(raw_minutes, max_chars=700)
 
     # Chain step 1 -> step 2 with typed intermediate state.
+    print_step(4, "Creating structured meeting minutes")
     meaningful_minutes = step_1_make_meaningful_minutes(raw_minutes, provider=provider)
+    print_subheader("STEP 1 OUTPUT")
+    print(meaningful_minutes.model_dump_json(indent=2))
+
+    print_step(5, "Creating action plan from Step 1 JSON")
     action_plan = step_2_create_action_plan(meaningful_minutes, provider=provider)
+    print_subheader("STEP 2 OUTPUT")
+    print(action_plan.model_dump_json(indent=2))
 
     # Final step: persist the chain output for review/sharing.
+    print_step(6, "Writing markdown report")
     markdown_report = build_markdown_output(meaningful_minutes, action_plan)
     saved_path = write_markdown_output(markdown_report, args.output)
     print_subheader("OUTPUT SAVED")
     print(saved_path)
+    print_step(7, "What to observe")
+    print("Prompt chaining is useful when each step produces a clearer intermediate artifact for the next step.")

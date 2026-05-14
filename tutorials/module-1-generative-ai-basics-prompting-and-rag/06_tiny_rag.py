@@ -10,7 +10,23 @@
 # Course: Generative and Agentic AI
 
 import math
+import sys
+from pathlib import Path
+
 from ollama import chat, embed
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tutorials.terminal_utils import (
+    print_ascii_tree,
+    print_header,
+    print_kv,
+    print_prompt_preview,
+    print_step,
+    print_text_preview,
+)
 
 # Small in-memory knowledge base used for retrieval in this teaching demo.
 # In production, this would often come from a vector database or indexed document store.
@@ -156,6 +172,42 @@ Question:
 # - runs no-RAG and RAG paths
 # - prints retrieval evidence and both answers for comparison
 if __name__ == "__main__":
+    print_header("Tiny RAG Pipeline")
+    print("What this demonstrates: compare a direct LLM answer with an answer grounded in retrieved course notes.")
+
+    print_step(1, "Inspecting RAG data flow")
+    print_ascii_tree(
+        """
+        User Question
+            |
+            v
+        Query Embedding
+            |
+            v
+        Similarity Search over Course Documents
+            |
+            v
+        Top Retrieved Chunks
+            |
+            v
+        Prompt with Context
+            |
+            v
+        Ollama Chat Model
+            |
+            v
+        Grounded Answer
+        """
+    )
+
+    print_step(2, "Checking models and document collection")
+    print_kv("Chat provider", "ollama")
+    print_kv("Chat model", "qwen3:4b")
+    print_kv("Embedding provider", "ollama")
+    print_kv("Embedding model", "qwen3-embedding:0.6b")
+    print_kv("Documents loaded", len(documents))
+    print_kv("Chunking strategy", "one short teaching paragraph per in-memory document")
+
     default_query = "What is the difference between RAG and fine-tuning?"
     user_query = input(
         f"Enter your question for the RAG demo\n"
@@ -164,45 +216,31 @@ if __name__ == "__main__":
 
     query = user_query if user_query else default_query
 
-    print("\nRunning no-RAG answer...\n")
+    print_step(3, "Running baseline answer without retrieval")
+    print_kv("User query", query)
     no_rag_answer = answer_without_rag(query)
 
-    print("Running retrieval...\n")
+    print_step(4, "Embedding query and retrieving top chunks")
     retrieved = retrieve(query, documents, top_k=3)
+    for rank, (score, doc_id, doc_text) in enumerate(retrieved, start=1):
+        print(f"Rank {rank} | Document {doc_id} | similarity={score:.4f}")
+        print_text_preview("Chunk", doc_text, max_chars=220)
+        print()
 
-    print("Running RAG-grounded answer...\n")
+    print_step(5, "Building grounded prompt and sending to Ollama")
     context, rag_answer = answer_with_rag(query, retrieved)
+    print_prompt_preview(context, max_chars=700)
 
-    print("=" * 80)
-    print("QUESTION:\n")
-    print(query)
-
-    print("\n" + "=" * 80)
-    print("TOP RETRIEVED DOCUMENTS:\n")
-    # Expected observation: top documents should usually be semantically related to the query.
-    for score, doc_id, doc_text in retrieved:
-        preview = doc_text.strip().replace("\n", " ")
-        if len(preview) > 160:
-            preview = preview[:160] + "..."
-        print(f"Document {doc_id} | similarity={score:.4f}")
-        print(f"Preview: {preview}\n")
-
-    print("=" * 80)
-    print("CONTEXT SENT TO MODEL (RAG):\n")
-    print(context)
-
-    print("\n" + "=" * 80)
-    print("ANSWER WITHOUT RAG:\n")
+    print_step(6, "Comparing outputs")
+    print("ANSWER WITHOUT RAG:")
     print(no_rag_answer)
 
-    print("\n" + "=" * 80)
-    print("ANSWER WITH RAG:\n")
+    print("\nANSWER WITH RAG:")
     print(rag_answer)
 
     # Final teaching note reinforces the central RAG lesson:
     # better retrieval usually leads to better grounded answers.
-    print("\n" + "=" * 80)
-    print("TEACHING NOTE:\n")
+    print_step(7, "What to observe")
     print(
         "Compare whether the RAG answer is more grounded, more specific, and cites the retrieved documents. "
         "If the retrieval corpus is weak or the wrong chunks are retrieved, the RAG answer may still be limited."

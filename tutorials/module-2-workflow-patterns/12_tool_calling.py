@@ -37,7 +37,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from tutorials.llm_client import build_provider_parser, get_selected_provider_and_model
-from workflow_utils import ask_ollama_structured, print_header, print_subheader, pretty_json
+from workflow_utils import ask_ollama_structured, print_ascii_tree, print_header, print_step, print_subheader, pretty_json
 
 
 # -------------------------------------------------------------------
@@ -324,17 +324,38 @@ if __name__ == "__main__":
     provider = args.provider
     selected_provider, selected_model = get_selected_provider_and_model(provider)
 
-    print_header("12 - Tool Calling")
-    print("Pattern: let the model decide when to use a tool")
+    print_header("12 - TOOL CALLING")
+    print("What this demonstrates: the model decides what tool is needed, but Python executes the tool.")
+    print_step(1, "Inspecting tool-calling flow")
+    print_ascii_tree(
+        """
+        User Query
+            |
+            v
+        Tool Decision
+            |
+            v
+        Tool Invocation JSON
+            |
+            v
+        Python Tool Execution
+            |
+            v
+        Final Answer
+        """
+    )
+    print_step(2, "Checking provider, model, and available tools")
     print("Why it matters: combine language with reliable local actions")
     active_model = get_active_model(provider)
     print(f"Provider: {selected_provider} | Model in use: {selected_model}")
+    print("Available tools: calculator_add, calculator_multiply, read_file, count_words, get_day_name, keyword_check, study_time_estimate")
 
     user_query = get_user_query()
 
-    print_subheader("User Query")
+    print_step(3, "User query")
     print(user_query)
 
+    print_step(4, "Asking model to choose a tool")
     decision = decide_tool(user_query, active_model, provider=provider)
     print_subheader("Tool Decision")
     print(pretty_json(decision))
@@ -343,15 +364,22 @@ if __name__ == "__main__":
     if not decision.needs_tool or decision.tool_name == "none":
         print_subheader("Final")
         print("No tool was needed.")
+        print_step(5, "What to observe")
+        print("Tool calling is optional; the model can also decide that plain language is enough.")
     else:
+        print_step(5, "Building structured tool invocation")
         invocation = build_tool_invocation(user_query, decision, active_model, provider=provider)
         print_subheader("Tool Invocation")
         print(pretty_json(invocation))
 
+        print_step(6, "Executing selected Python tool")
         tool_result = execute_tool(invocation)
         print_subheader("Structured Tool Result")
         print(pretty_json(tool_result))
 
+        print_step(7, "Creating final answer from tool result")
         final_answer = create_final_answer(user_query, tool_result, active_model, provider=provider)
         print_subheader("Final Answer")
         print(pretty_json(final_answer))
+        print_step(8, "What to observe")
+        print("The LLM selected the action, but deterministic Python code performed the actual operation.")
